@@ -167,6 +167,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Wix Ma
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 let leads = JSON.parse(localStorage.getItem('cz_leads_v4') || '[]');
+const SHEET_URL = 'https://script.google.com/a/macros/cloudzone.io/s/AKfycbzFrw8-PR_oaDB6_MvcpBwvSGBHfo-0fv_8GhjAsWbBwQ2Isw59hgWZakBglqC_PDoe/exec';
 let mediaRecorder = null, audioChunks = [], timerInt = null;
 let secs = 0, isRecording = false, recognition = null, liveTranscript = '';
 
@@ -355,6 +356,7 @@ score must be integer 1-5.`
     if (idx !== -1) {
       leads[idx] = { ...leads[idx], ...parsed, score: parseInt(parsed.score)||3, processing: false };
       saveLeads(); renderLeads();
+      saveLeadToSheet(leads[idx], idx + 1);
       const name = [parsed.firstName, parsed.lastName].filter(Boolean).join(' ') || 'Lead';
       toast('&#10003; ' + name + ' saved!');
     }
@@ -368,6 +370,32 @@ score must be integer 1-5.`
 function saveLeads() {
   const toSave = leads.map(l => { const {audioUrl, ...rest} = l; return rest; });
   localStorage.setItem('cz_leads_v4', JSON.stringify(toSave));
+}
+
+async function saveLeadToSheet(lead, num) {
+  try {
+    await fetch(SHEET_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'save',
+        lead: {
+          '#': num,
+          'First Name': lead.firstName || '',
+          'Last Name': lead.lastName || '',
+          'Company': lead.company || '',
+          'Job Title': lead.jobTitle || '',
+          'Lead Score': lead.score || '',
+          'Discussion Notes': lead.notes || '',
+          'Time': lead.time || '',
+          'Date': lead.date || '',
+          'Conference': lead.conf || ''
+        }
+      })
+    });
+  } catch(e) {
+    console.log('Sheet sync error:', e.message);
+  }
 }
 
 function deleteLead(id) {
