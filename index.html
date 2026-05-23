@@ -262,9 +262,14 @@ async function processTranscript(text) {
   if (!text || text.trim().length < 3) { toast('No speech detected. Try again.'); setUI('idle'); return; }
   setUI('processing');
   try {
-    const resp = await fetch('/.netlify/functions/claude', {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': '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',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 400,
