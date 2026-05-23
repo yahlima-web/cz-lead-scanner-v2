@@ -75,7 +75,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Wix Ma
 .laudio{width:100%;height:36px;border-radius:var(--rsm);margin-top:6px}
 .ltranscript{font-size:11px;color:var(--text3);line-height:1.5;margin-top:8px;padding:8px 10px;background:var(--bg);border-radius:var(--rsm)}
 .email-btn{width:100%;background:var(--purple);color:#fff;border:none;border-radius:var(--rsm);padding:10px;font-size:12px;font-weight:600;font-family:'Wix Madefor Display',sans-serif;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px}
-.email-preview{font-size:12px;color:var(--text2);line-height:1.6;margin-top:8px;padding:10px;background:#f0f0ff;border-radius:var(--rsm);border-left:3px solid var(--purple);white-space:pre-wrap}
+.email-preview{font-size:12px;color:var(--text2);line-height:1.6;margin-top:8px;padding:10px;background:#f0f0ff;border-radius:var(--rsm);border-left:3px solid var(--purple);white-space:pre-wrap;display:none}
 .export-bar{padding:16px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
 .export-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:var(--rsm);padding:16px;font-size:14px;font-weight:700;font-family:'Wix Madefor Display',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity 0.2s;box-shadow:0 4px 16px rgba(13,27,62,0.2)}
 .export-btn:active{opacity:0.85}
@@ -198,34 +198,30 @@ async function startRecording() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     audioChunks = []; liveTranscript = '';
 
-    // iOS Safari supports audio/mp4, Chrome supports audio/webm
     const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' :
                      MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' :
-                     MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' :
-                     MediaRecorder.isTypeSupported('audio/aac') ? 'audio/aac' : '';
-
+                     MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '';
     try {
       mediaRecorder = mimeType ? new MediaRecorder(stream, {mimeType}) : new MediaRecorder(stream);
     } catch(e) {
       mediaRecorder = new MediaRecorder(stream);
     }
-
     mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
     mediaRecorder.onstop = () => {
       stream.getTracks().forEach(t => t.stop());
-      const finalMime = mediaRecorder.mimeType || mimeType || 'audio/webm';
-      const blob = new Blob(audioChunks, { type: finalMime });
-      processRecording(blob, liveTranscript, finalMime);
+      processRecording(liveTranscript);
     };
     mediaRecorder.start(100);
     isRecording = true;
 
-    // Speech recognition — works on Chrome/Android, not iOS
+    // Speech Recognition — works on Chrome desktop + Android
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SR) {
       try {
         recognition = new SR();
-        recognition.lang = 'en-US'; recognition.continuous = true; recognition.interimResults = true;
+        recognition.lang = 'en-US';
+        recognition.continuous = true;
+        recognition.interimResults = true;
         recognition.onresult = (e) => {
           let final = '', interim = '';
           for (let i = 0; i < e.results.length; i++) {
@@ -235,11 +231,21 @@ async function startRecording() {
           liveTranscript = final;
           document.getElementById('trtext').textContent = (final + interim).trim() || 'Listening...';
         };
-        recognition.onerror = () => {};
+        recognition.onerror = (e) => {
+          if (e.error === 'not-allowed') toast('Microphone permission denied');
+        };
+        recognition.onend = () => {
+          // Restart if still recording (iOS stops after silence)
+          if (isRecording) {
+            try { recognition.start(); } catch(e) {}
+          }
+        };
         recognition.start();
-      } catch(e) {}
+      } catch(e) {
+        document.getElementById('trtext').textContent = 'Recording... speak clearly following the template.';
+      }
     } else {
-      document.getElementById('trtext').textContent = 'Recording... Claude will transcribe after saving.';
+      document.getElementById('trtext').textContent = 'Recording... speak clearly following the template.';
     }
 
     secs = 0;
@@ -266,13 +272,11 @@ function stopRecording() {
   document.getElementById('stimer').textContent = '';
 }
 
-async function processRecording(blob, transcript, mimeType) {
-  const audioUrl = URL.createObjectURL(blob);
+async function processRecording(transcript) {
   const lead = {
     id: Date.now(),
     firstName: '', lastName: '', company: '', jobTitle: '',
     score: 3, notes: '', transcript: transcript.trim(),
-    audioUrl, mimeType,
     time: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}),
     date: new Date().toLocaleDateString('en-US'),
     conf: localStorage.getItem('cz_conf') || '',
@@ -286,16 +290,12 @@ async function processRecording(blob, transcript, mimeType) {
   document.getElementById('trtext').textContent = 'Start recording to see live transcript...';
   switchTab('leads');
 
-  // Convert blob to base64
-  const b64 = await new Promise((res, rej) => {
-    const reader = new FileReader();
-    reader.onload = () => res(reader.result.split(',')[1]);
-    reader.onerror = rej;
-    reader.readAsDataURL(blob);
-  });
-
-  // Determine media type for Claude
-  const claudeMime = mimeType.includes('mp4') || mimeType.includes('aac') ? 'audio/mp4' : 'audio/webm';
+  if (!transcript.trim() || transcript.trim().length < 3) {
+    const idx = leads.findIndex(l => l.id === lead.id);
+    if (idx !== -1) { leads[idx].processing = false; saveLeads(); renderLeads(); }
+    toast('No transcript detected. Try again.');
+    return;
+  }
 
   try {
     const resp = await fetch('https://cz-lead-proxy.yahlima.workers.dev', {
@@ -303,23 +303,16 @@ async function processRecording(blob, transcript, mimeType) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 500,
+        max_tokens: 400,
         messages: [{
           role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `You are a sales assistant at a B2B tech conference. Listen to this audio recording and extract lead info.\nThe person is following this template: "First name [first]. Last name [last]. Company [company]. Job title [title]. Lead score [1-5]. What we discussed [notes]."\nCorrect unclear or mispronounced words using context (e.g. "vprnd"="VP R&D", "checkpoint"="Check Point").\nReturn ONLY valid JSON, no markdown:\n{"firstName":"","lastName":"","company":"","jobTitle":"","score":3,"notes":""}\nscore must be integer 1-5.`
-            },
-            {
-              type: 'document',
-              source: {
-                type: 'base64',
-                media_type: claudeMime,
-                data: b64
-              }
-            }
-          ]
+          content: `You are a sales assistant at a B2B tech conference. Extract lead info from this voice transcript.
+Template: "First name [first]. Last name [last]. Company [company]. Job title [title]. Lead score [1-5]. What we discussed [notes]."
+Correct unclear or mispronounced words using context (e.g. "vprnd"="VP R&D", "checkpoint"="Check Point", "avigen"="Evigene").
+Return ONLY valid JSON, no markdown, no explanation:
+{"firstName":"","lastName":"","company":"","jobTitle":"","score":3,"notes":""}
+score must be integer 1-5. Use best guess even if unclear. Never return empty strings if you can infer the value.
+Transcript: "${transcript.trim()}"`
         }]
       })
     });
@@ -329,24 +322,19 @@ async function processRecording(blob, transcript, mimeType) {
     const idx = leads.findIndex(l => l.id === lead.id);
     if (idx !== -1) {
       leads[idx] = { ...leads[idx], ...parsed, score: parseInt(parsed.score)||3, processing: false };
-      if (parsed.firstName || parsed.lastName) {
-        leads[idx].transcript = `${parsed.firstName} ${parsed.lastName} | ${parsed.company} | ${parsed.jobTitle}`.trim();
-      }
       saveLeads(); renderLeads();
       const name = [parsed.firstName, parsed.lastName].filter(Boolean).join(' ') || 'Lead';
       toast('&#10003; ' + name + ' saved!');
     }
   } catch(e) {
-    // Fallback: if no transcript from speech recognition, show error
     const idx = leads.findIndex(l => l.id === lead.id);
     if (idx !== -1) { leads[idx].processing = false; saveLeads(); renderLeads(); }
-    toast('Error processing audio');
+    toast('Processing error. Try again.');
   }
 }
 
 function saveLeads() {
-  const s = leads.map(l => { const {audioUrl,...r} = l; return r; });
-  localStorage.setItem('cz_leads_v4', JSON.stringify(s));
+  localStorage.setItem('cz_leads_v4', JSON.stringify(leads));
 }
 
 function deleteLead(id) {
@@ -374,7 +362,7 @@ async function generateEmail(id) {
           content: `Write a short personalized follow-up email for a B2B sales lead met at a conference.
 Lead: ${lead.firstName} ${lead.lastName}, ${lead.jobTitle} at ${lead.company}.
 What we discussed: ${lead.notes || lead.transcript}.
-Write a warm, professional email (5-6 sentences max). Subject line + body. No placeholders.`
+Write from CloudZone's perspective. Warm, professional, 5-6 sentences max. Include subject line.`
         }]
       })
     });
@@ -383,10 +371,10 @@ Write a warm, professional email (5-6 sentences max). Subject line + body. No pl
     const preview = document.getElementById('eprev-' + id);
     preview.textContent = email;
     preview.style.display = 'block';
-    btn.textContent = '&#128231; Regenerate Email';
+    btn.innerHTML = '&#128231; Regenerate Email';
     btn.disabled = false;
   } catch(e) {
-    btn.textContent = '&#128231; Generate Email';
+    btn.innerHTML = '&#128231; Generate Follow-up Email';
     btn.disabled = false;
     toast('Error generating email');
   }
@@ -419,11 +407,10 @@ function renderLeads() {
         </div>
         <button class="dbtn" onclick="deleteLead(${l.id})">&#10005;</button>
       </div>
-      ${l.audioUrl ? `<audio class="laudio" controls src="${l.audioUrl}"></audio>` : ''}
       ${l.transcript ? `<div class="ltranscript">&#128221; ${l.transcript}</div>` : ''}
       ${!l.processing ? `
         <button class="email-btn" id="ebtn-${l.id}" onclick="generateEmail(${l.id})">&#128231; Generate Follow-up Email</button>
-        <div class="email-preview" id="eprev-${l.id}" style="display:none"></div>
+        <div class="email-preview" id="eprev-${l.id}"></div>
       ` : ''}
     </div>`;
   }).join('');
