@@ -4,11 +4,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CZ Lead Scanner">
 <meta name="theme-color" content="#060d1a">
-<link rel="manifest" href="manifest.json">
 <title>CZ Lead Scanner</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -35,32 +35,35 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 .page { flex: 1; overflow-y: auto; display: none; position: relative; z-index: 5; }
 .page.active { display: block; }
+
+/* RECORD PAGE */
 .rec-page { padding: 20px; }
 .template-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 18px; position: relative; overflow: hidden; }
 .template-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); }
 .template-label { font-size: 10px; font-weight: 600; color: var(--accent); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 8px; }
 .template-text { font-size: 13px; color: var(--text2); line-height: 1.7; }
 .template-text span { color: var(--text); font-weight: 500; }
-.rec-center { display: flex; flex-direction: column; align-items: center; padding: 16px 0 20px; }
-.rec-outer { width: 148px; height: 148px; border-radius: 50%; border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; margin-bottom: 18px; transition: all 0.3s; }
-.rec-outer.recording { border-color: rgba(255,77,106,0.4); animation: outerPulse 1.5s ease-in-out infinite; }
-.rec-outer.processing { border-color: rgba(0,194,255,0.4); }
-@keyframes outerPulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,106,0.2)} 50%{box-shadow:0 0 0 16px rgba(255,77,106,0)} }
-.rec-btn { width: 108px; height: 108px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border2); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; gap: 5px; transition: all 0.18s; }
-.rec-btn.recording { background: rgba(255,77,106,0.15); border-color: rgba(255,77,106,0.3); }
-.rec-btn.processing { background: var(--accent-glow); border-color: rgba(0,194,255,0.2); }
-.rec-btn-icon { font-size: 30px; line-height: 1; }
-.rec-btn-lbl { font-size: 10px; font-weight: 600; color: var(--text2); letter-spacing: 0.8px; text-transform: uppercase; }
-.rec-timer { font-family: 'DM Mono', monospace; font-size: 38px; font-weight: 500; color: var(--text); letter-spacing: -1px; min-height: 46px; }
-.rec-status { font-size: 13px; color: var(--text2); margin-top: 5px; text-align: center; }
-.transcript-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-top: 16px; font-size: 13px; color: var(--text2); line-height: 1.6; display: none; }
-.transcript-box.show { display: block; }
+
+.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.rec-start-btn { background: linear-gradient(135deg, #cc1133, var(--red)); color: #fff; border: none; border-radius: var(--radius); padding: 18px; font-size: 16px; font-weight: 700; font-family: 'DM Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
+.rec-start-btn:active { opacity: 0.85; }
+.rec-stop-btn { background: var(--surface2); color: var(--text2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 18px; font-size: 16px; font-weight: 700; font-family: 'DM Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+.rec-stop-btn.active { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; border-color: transparent; }
+.rec-stop-btn.active:active { opacity: 0.85; }
+
+.status-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+.status-dot.recording { background: var(--red); animation: blink 1s infinite; }
+.status-dot.processing { background: var(--accent); animation: blink 0.5s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.status-text { font-size: 13px; color: var(--text2); }
+.status-timer { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); margin-left: auto; }
+
+.transcript-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 14px; min-height: 60px; }
 .transcript-label { font-size: 10px; font-weight: 600; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
-.proc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-top: 14px; text-align: center; display: none; }
-.proc-card.show { display: block; }
-.proc-spin { width: 28px; height: 28px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 10px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.proc-txt { font-size: 12px; color: var(--text2); }
+.transcript-text { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+/* LEADS PAGE */
 .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
 .stat { background: var(--bg); padding: 14px 10px; text-align: center; }
 .stat-n { font-size: 24px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--text); line-height: 1; }
@@ -69,7 +72,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .stat-l { font-size: 10px; color: var(--text3); margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase; font-weight: 500; }
 .empty-state { text-align: center; padding: 56px 24px; color: var(--text3); font-size: 13px; line-height: 2; }
 .empty-icon { font-size: 42px; margin-bottom: 8px; }
-.lead-card { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: flex-start; }
+
+.lead-card { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.lead-card-top { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
 .lead-num { font-size: 10px; font-weight: 600; color: var(--text3); font-family: 'DM Mono', monospace; min-width: 24px; padding-top: 13px; text-align: center; }
 .score-dot { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; font-family: 'DM Mono', monospace; flex-shrink: 0; }
 .s5 { background: rgba(0,229,160,0.1); color: var(--green); }
@@ -79,15 +84,22 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .s1 { background: rgba(255,77,106,0.05); color: #ffaaaa; }
 .lead-body { flex: 1; min-width: 0; }
 .lead-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-.lead-co { font-size: 12px; color: var(--text2); margin-bottom: 5px; }
+.lead-co { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
 .lead-notes { font-size: 12px; color: var(--text2); line-height: 1.5; }
-.lead-time { font-size: 10px; color: var(--text3); margin-top: 4px; font-family: 'DM Mono', monospace; }
+.lead-time { font-size: 10px; color: var(--text3); margin-top: 3px; font-family: 'DM Mono', monospace; }
 .del-btn { background: transparent; border: none; color: var(--text3); font-size: 18px; cursor: pointer; padding: 4px 8px; flex-shrink: 0; transition: color 0.15s; }
 .del-btn:hover { color: var(--red); }
+
+.lead-audio { width: 100%; height: 36px; border-radius: var(--radius-sm); }
+.lead-transcript { font-size: 11px; color: var(--text3); line-height: 1.5; margin-top: 6px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); }
+
+.processing-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--accent); background: var(--accent-glow); padding: 4px 10px; border-radius: 20px; margin-top: 6px; }
+
 .export-bar { padding: 16px 20px; border-top: 1px solid var(--border); background: var(--bg); flex-shrink: 0; }
 .export-btn { width: 100%; background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; border: none; border-radius: var(--radius-sm); padding: 15px; font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
 .export-btn:active { opacity: 0.85; }
 .export-btn:disabled { opacity: 0.35; cursor: default; }
+
 .settings-page { padding: 24px 20px; }
 .s-label { font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
 .s-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
@@ -101,6 +113,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .inp-wrap input::placeholder { color: var(--text3); }
 .s-hint { font-size: 11px; color: var(--text3); line-height: 1.6; margin-bottom: 20px; }
 .s-version { font-size: 11px; color: var(--text3); text-align: center; line-height: 1.8; }
+
 .toast { position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--surface2); border: 1px solid var(--border2); color: var(--text); font-size: 12px; font-weight: 500; padding: 9px 18px; border-radius: 20px; opacity: 0; transition: all 0.25s; pointer-events: none; white-space: nowrap; z-index: 999; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
@@ -119,38 +132,32 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <div class="tab" id="tab-leads" onclick="switchTab('leads')">Leads</div>
     <div class="tab" id="tab-settings" onclick="switchTab('settings')">Settings</div>
   </div>
+
   <div class="page active" id="page-record">
     <div class="rec-page">
       <div class="template-card">
         <div class="template-label">Recording Template</div>
         <div class="template-text">"First name: <span>[first]</span>. Last name: <span>[last]</span>. Company: <span>[company]</span>. Job title: <span>[title]</span>. Lead score <span>[1-5]</span>. What we discussed: <span>[notes]</span>."</div>
       </div>
-      <div class="rec-center">
-        <div class="rec-outer" id="recOuter">
-          <button class="rec-btn" id="recBtn" onclick="startRecording()">
-            <div class="rec-btn-icon" id="recIcon">🎙</div>
-            <div class="rec-btn-lbl" id="recLbl">Record</div>
-          </button>
-        </div>
-        <div class="rec-timer" id="recTimer"></div>
-        <div class="rec-status" id="recStatus">Tap to start recording</div>
 
+      <div class="btn-row">
+        <button class="rec-start-btn" id="startBtn" onclick="startRecording()">🎙 Record</button>
+        <button class="rec-stop-btn" id="stopBtn" onclick="stopRecording()">⏹ Stop & Save</button>
       </div>
-      <div id="stopWrap" style="display:none;text-align:center;margin:12px 0;">
-        <button id="stopBtn" style="background:var(--red);color:#fff;border:none;border-radius:var(--radius-sm);padding:16px 48px;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;width:100%;letter-spacing:0.5px;" onclick="stopRecording()">
-          ⏹ &nbsp; STOP &amp; SAVE
-        </button>
+
+      <div class="status-bar">
+        <div class="status-dot" id="statusDot"></div>
+        <div class="status-text" id="statusText">Ready to record</div>
+        <div class="status-timer" id="statusTimer"></div>
       </div>
-      <div class="transcript-box" id="transcriptBox">
+
+      <div class="transcript-box">
         <div class="transcript-label">Live Transcript</div>
-        <div id="transcriptText"></div>
-      </div>
-      <div class="proc-card" id="procCard">
-        <div class="proc-spin"></div>
-        <div class="proc-txt" id="procTxt">Extracting lead info...</div>
+        <div class="transcript-text" id="transcriptText">Start recording to see live transcript...</div>
       </div>
     </div>
   </div>
+
   <div class="page" id="page-leads">
     <div class="stats-row">
       <div class="stat"><div class="stat-n" id="sTotal">0</div><div class="stat-l">Total</div></div>
@@ -162,6 +169,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       <button class="export-btn" id="exportBtn" onclick="exportExcel()" disabled>⬇ Export to Excel</button>
     </div>
   </div>
+
   <div class="page" id="page-settings">
     <div class="settings-page">
       <div class="s-label">Conference Name</div>
@@ -173,15 +181,24 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         <div class="s-row"><div class="s-row-label">Saved leads</div><div class="s-row-val" id="savedCnt">0</div></div>
         <div class="s-row"><div class="s-row-label">Clear all data</div><button class="s-del" onclick="clearAll()">Delete all</button></div>
       </div>
-      <div class="s-version">CloudZone Lead Scanner v3.0<br>Powered by Claude AI</div>
+      <div class="s-version">CloudZone Lead Scanner v4.0<br>Powered by Claude AI</div>
     </div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-let leads = JSON.parse(localStorage.getItem('cz_leads_v3') || '[]');
-let isRec = false, recognition = null, timerInt, secs = 0, transcript = '';
+const API_KEY = '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';
+
+let leads = JSON.parse(localStorage.getItem('cz_leads_v4') || '[]');
+let mediaRecorder = null;
+let audioChunks = [];
+let timerInt = null;
+let secs = 0;
+let isRecording = false;
+let recognition = null;
+let liveTranscript = '';
 
 function switchTab(name) {
   ['record','leads','settings'].forEach(t => {
@@ -197,120 +214,151 @@ function switchTab(name) {
 
 function saveConf() { localStorage.setItem('cz_conf', document.getElementById('confInput').value.trim()); }
 
-function toggleRecord() {
-  startRecording();
-}
+async function startRecording() {
+  if (isRecording) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+    liveTranscript = '';
 
-function startRecording() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { toast('Use Chrome browser for recording'); return; }
-  transcript = '';
-  recognition = new SR();
-  recognition.lang = 'en-US';
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  recognition.onresult = (e) => {
-    let final = '', interim = '';
-    for (let i = 0; i < e.results.length; i++) {
-      if (e.results[i].isFinal) final += e.results[i][0].transcript + ' ';
-      else interim += e.results[i][0].transcript;
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      processRecording(blob, liveTranscript);
+    };
+    mediaRecorder.start(100);
+    isRecording = true;
+
+    // Start speech recognition for live transcript
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SR) {
+      recognition = new SR();
+      recognition.lang = 'en-US';
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.onresult = (e) => {
+        let final = '', interim = '';
+        for (let i = 0; i < e.results.length; i++) {
+          if (e.results[i].isFinal) final += e.results[i][0].transcript + ' ';
+          else interim += e.results[i][0].transcript;
+        }
+        liveTranscript = final;
+        document.getElementById('transcriptText').textContent = final + interim || 'Listening...';
+      };
+      recognition.onerror = () => {};
+      recognition.start();
     }
-    transcript = final;
-    document.getElementById('transcriptBox').classList.add('show');
-    document.getElementById('transcriptText').textContent = final + interim;
-  };
-  recognition.onerror = (e) => { toast('Mic error: ' + e.error); setUI('idle'); isRec = false; };
-  recognition.onend = () => { if (isRec) { isRec = false; processTranscript(transcript); } };
-  recognition.start();
-  isRec = true; secs = 0;
-  setUI('recording');
-  document.getElementById('stopWrap').style.display = 'block';
-  timerInt = setInterval(() => {
-    secs++;
-    document.getElementById('recTimer').textContent =
-      String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
-  }, 1000);
+
+    secs = 0;
+    document.getElementById('statusDot').className = 'status-dot recording';
+    document.getElementById('statusText').textContent = 'Recording...';
+    document.getElementById('stopBtn').classList.add('active');
+    document.getElementById('transcriptText').textContent = 'Listening...';
+
+    timerInt = setInterval(() => {
+      secs++;
+      const m = String(Math.floor(secs/60)).padStart(2,'0');
+      const s = String(secs%60).padStart(2,'0');
+      document.getElementById('statusTimer').textContent = m+':'+s;
+    }, 1000);
+
+  } catch(e) {
+    toast('Microphone access denied');
+  }
 }
 
 function stopRecording() {
-  isRec = false;
+  if (!isRecording) return;
+  isRecording = false;
   clearInterval(timerInt);
-  document.getElementById('stopWrap').style.display = 'none';
-  if (recognition) recognition.stop();
+  if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  document.getElementById('statusDot').className = 'status-dot processing';
+  document.getElementById('statusText').textContent = 'Processing...';
+  document.getElementById('stopBtn').classList.remove('active');
+  document.getElementById('statusTimer').textContent = '';
 }
 
-function setUI(state) {
-  document.getElementById('recBtn').className = 'rec-btn' + (state==='idle' ? '' : ' '+state);
-  document.getElementById('recOuter').className = 'rec-outer' + (state==='idle' ? '' : ' '+state);
-  if (state==='recording') {
-    document.getElementById('recIcon').textContent = '⏹';
-    document.getElementById('recLbl').textContent = 'STOP';
-    document.getElementById('recStatus').textContent = 'Recording... tap to stop';
-  } else if (state==='processing') {
-    document.getElementById('recIcon').textContent = '⌛';
-    document.getElementById('recLbl').textContent = '';
-    document.getElementById('recStatus').textContent = 'Processing...';
-    document.getElementById('recTimer').textContent = '';
-    document.getElementById('procCard').classList.add('show');
-  } else {
-    document.getElementById('recIcon').textContent = '🎙';
-    document.getElementById('recLbl').textContent = 'Record';
-    document.getElementById('recStatus').textContent = 'Tap to start recording';
-    document.getElementById('recTimer').textContent = '';
-    document.getElementById('procCard').classList.remove('show');
-  }
-}
+async function processRecording(blob, transcript) {
+  const audioUrl = URL.createObjectURL(blob);
+  const time = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+  const date = new Date().toLocaleDateString('en-US');
+  const conf = localStorage.getItem('cz_conf') || '';
 
-async function processTranscript(text) {
-  if (!text || text.trim().length < 3) { toast('No speech detected. Try again.'); setUI('idle'); return; }
-  setUI('processing');
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': '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',
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 400,
-        messages: [{
-          role: 'user',
-          content: `Extract lead info from this sales conference transcript. Return ONLY valid JSON, no markdown, no extra text:
+  // Save lead with audio immediately
+  const lead = {
+    id: Date.now(),
+    firstName: '', lastName: '', company: '', jobTitle: '',
+    score: 3, notes: '', transcript: transcript.trim(),
+    audioUrl, time, date, conf, processing: true
+  };
+
+  leads.push(lead);
+  saveleads();
+  updateBadge();
+  toast('Recording saved! Processing...');
+  document.getElementById('statusDot').className = 'status-dot';
+  document.getElementById('statusText').textContent = 'Ready to record';
+  document.getElementById('transcriptText').textContent = 'Start recording to see live transcript...';
+  switchTab('leads');
+
+  // Now extract data from transcript via Claude
+  if (transcript.trim().length > 3) {
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': API_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 400,
+          messages: [{
+            role: 'user',
+            content: `Extract lead info from this sales conference transcript. Return ONLY valid JSON, no markdown:
 {"firstName":"","lastName":"","company":"","jobTitle":"","score":3,"notes":""}
-Rules: score is integer 1-5 (5=very hot, 1=not relevant). Use empty string if field not mentioned.
-Transcript: "${text.trim()}"`
-        }]
-      })
-    });
-    const data = await resp.json();
-    const raw = (data.content?.[0]?.text || '').replace(/```json|```/g,'').trim();
-    let lead;
-    try { lead = JSON.parse(raw); } catch(e) { toast('Could not parse. Try again.'); setUI('idle'); return; }
-    lead.score = parseInt(lead.score) || 3;
-    lead.time = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
-    lead.date = new Date().toLocaleDateString('en-US');
-    lead.conf = localStorage.getItem('cz_conf') || '';
-    lead.transcript = text.trim();
-    leads.push(lead);
-    localStorage.setItem('cz_leads_v3', JSON.stringify(leads));
-    updateBadge();
-    const name = [lead.firstName, lead.lastName].filter(Boolean).join(' ') || 'Lead';
-    toast('✓ ' + name + ' saved!');
-    document.getElementById('transcriptBox').classList.remove('show');
-    document.getElementById('transcriptText').textContent = '';
-  } catch(e) {
-    toast('Error: ' + e.message);
+score: integer 1-5 (5=very hot). Empty string if not mentioned.
+Transcript: "${transcript.trim()}"`
+          }]
+        })
+      });
+      const data = await resp.json();
+      const raw = (data.content?.[0]?.text || '').replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(raw);
+      const idx = leads.findIndex(l => l.id === lead.id);
+      if (idx !== -1) {
+        leads[idx] = { ...leads[idx], ...parsed, score: parseInt(parsed.score)||3, processing: false };
+        saveleads();
+        renderLeads();
+        const name = [parsed.firstName, parsed.lastName].filter(Boolean).join(' ') || 'Lead';
+        toast('✓ ' + name + ' saved!');
+      }
+    } catch(e) {
+      const idx = leads.findIndex(l => l.id === lead.id);
+      if (idx !== -1) { leads[idx].processing = false; saveleads(); renderLeads(); }
+      toast('Saved (could not extract data)');
+    }
+  } else {
+    const idx = leads.findIndex(l => l.id === lead.id);
+    if (idx !== -1) { leads[idx].processing = false; saveleads(); renderLeads(); }
   }
-  setUI('idle');
 }
 
-function deleteLead(idx) {
+function saveleads() {
+  // Save without audioUrl (can't store blobs in localStorage)
+  const toSave = leads.map(l => { const {audioUrl, ...rest} = l; return rest; });
+  localStorage.setItem('cz_leads_v4', JSON.stringify(toSave));
+}
+
+function deleteLead(id) {
   if (!confirm('Delete this lead?')) return;
-  leads.splice(idx, 1);
-  localStorage.setItem('cz_leads_v3', JSON.stringify(leads));
+  leads = leads.filter(l => l.id !== id);
+  saveleads();
   updateBadge();
   renderLeads();
   toast('Lead deleted');
@@ -332,15 +380,20 @@ function renderLeads() {
     const name = [l.firstName, l.lastName].filter(Boolean).join(' ') || '—';
     const meta = [l.jobTitle, l.company].filter(Boolean).join(' · ') || '—';
     return `<div class="lead-card">
-      <div class="lead-num">#${i+1}</div>
-      <div class="score-dot s${sc}">${sc}</div>
-      <div class="lead-body">
-        <div class="lead-name">${name}</div>
-        <div class="lead-co">${meta}</div>
-        ${l.notes ? `<div class="lead-notes">${l.notes}</div>` : ''}
-        <div class="lead-time">${l.time||''} ${l.conf ? '· '+l.conf : ''}</div>
+      <div class="lead-card-top">
+        <div class="lead-num">#${i+1}</div>
+        <div class="score-dot s${sc}">${sc}</div>
+        <div class="lead-body">
+          <div class="lead-name">${name}</div>
+          <div class="lead-co">${meta}</div>
+          ${l.notes ? `<div class="lead-notes">${l.notes}</div>` : ''}
+          <div class="lead-time">${l.time||''} ${l.conf ? '· '+l.conf : ''}</div>
+          ${l.processing ? `<div class="processing-badge">⌛ Processing...</div>` : ''}
+        </div>
+        <button class="del-btn" onclick="deleteLead(${l.id})">✕</button>
       </div>
-      <button class="del-btn" onclick="deleteLead(${i})">✕</button>
+      ${l.audioUrl ? `<audio class="lead-audio" controls src="${l.audioUrl}"></audio>` : ''}
+      ${l.transcript ? `<div class="lead-transcript">📝 ${l.transcript}</div>` : ''}
     </div>`;
   }).join('');
   document.getElementById('exportBtn').disabled = false;
@@ -367,7 +420,7 @@ function exportExcel() {
     'Conference': l.conf || ''
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = [5,14,14,20,20,10,40,50,10,12,20].map(w=>({wch:w}));
+  ws['!cols'] = [5,14,14,20,20,10,40,60,10,12,20].map(w=>({wch:w}));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Leads');
   const conf = (localStorage.getItem('cz_conf')||'Conference').replace(/\s+/g,'_');
@@ -379,7 +432,7 @@ function exportExcel() {
 function clearAll() {
   if (!confirm('Delete ALL ' + leads.length + ' leads?')) return;
   leads = [];
-  localStorage.removeItem('cz_leads_v3');
+  localStorage.removeItem('cz_leads_v4');
   updateBadge();
   renderLeads();
   toast('All leads cleared');
@@ -392,7 +445,6 @@ function toast(msg) {
 }
 
 updateBadge();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
 </html>
