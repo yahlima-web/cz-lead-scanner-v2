@@ -209,7 +209,8 @@ async function startRecording() {
     mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
     mediaRecorder.onstop = () => {
       stream.getTracks().forEach(t => t.stop());
-      processRecording(liveTranscript);
+      const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+      processRecording(liveTranscript, blob);
     };
     mediaRecorder.start(100);
     isRecording = true;
@@ -272,11 +273,13 @@ function stopRecording() {
   document.getElementById('stimer').textContent = '';
 }
 
-async function processRecording(transcript) {
+async function processRecording(transcript, audioBlob) {
+  const audioUrl = audioBlob ? URL.createObjectURL(audioBlob) : null;
   const lead = {
     id: Date.now(),
     firstName: '', lastName: '', company: '', jobTitle: '',
     score: 3, notes: '', transcript: transcript.trim(),
+    audioUrl,
     time: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}),
     date: new Date().toLocaleDateString('en-US'),
     conf: localStorage.getItem('cz_conf') || '',
@@ -290,31 +293,60 @@ async function processRecording(transcript) {
   document.getElementById('trtext').textContent = 'Start recording to see live transcript...';
   switchTab('leads');
 
-  if (!transcript.trim() || transcript.trim().length < 3) {
-    const idx = leads.findIndex(l => l.id === lead.id);
-    if (idx !== -1) { leads[idx].processing = false; saveLeads(); renderLeads(); }
-    toast('No transcript detected. Try again.');
-    return;
-  }
+  const hasText = transcript.trim().length > 3;
 
   try {
+    let messages;
+
+    if (hasText) {
+      // Desktop/Android: use text transcript
+      messages = [{
+        role: 'user',
+        content: `You are a sales assistant at a B2B tech conference. Extract lead info from this voice transcript.
+Template: "First name [first]. Last name [last]. Company [company]. Job title [title]. Lead score [1-5]. What we discussed [notes]."
+Correct unclear words using context (e.g. "vprnd"="VP R&D", "checkpoint"="Check Point").
+Return ONLY valid JSON, no markdown:
+{"firstName":"","lastName":"","company":"","jobTitle":"","score":3,"notes":""}
+score must be integer 1-5.
+Transcript: "${transcript.trim()}"`
+      }];
+    } else if (audioBlob) {
+      // iOS: send audio directly to Claude
+      const b64 = await new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result.split(',')[1]);
+        reader.onerror = rej;
+        reader.readAsDataURL(audioBlob);
+      });
+      const mime = audioBlob.type.includes('mp4') ? 'audio/mp4' : 'audio/webm';
+      messages = [{
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: `Listen to this audio recording from a sales conference and extract lead info.
+Template used: "First name [first]. Last name [last]. Company [company]. Job title [title]. Lead score [1-5]. What we discussed [notes]."
+Return ONLY valid JSON, no markdown:
+{"firstName":"","lastName":"","company":"","jobTitle":"","score":3,"notes":""}
+score must be integer 1-5.`
+          },
+          {
+            type: 'document',
+            source: { type: 'base64', media_type: mime, data: b64 }
+          }
+        ]
+      }];
+    } else {
+      const idx = leads.findIndex(l => l.id === lead.id);
+      if (idx !== -1) { leads[idx].processing = false; saveLeads(); renderLeads(); }
+      toast('No audio detected. Try again.');
+      return;
+    }
+
     const resp = await fetch('https://cz-lead-proxy.yahlima.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 400,
-        messages: [{
-          role: 'user',
-          content: `You are a sales assistant at a B2B tech conference. Extract lead info from this voice transcript.
-Template: "First name [first]. Last name [last]. Company [company]. Job title [title]. Lead score [1-5]. What we discussed [notes]."
-Correct unclear or mispronounced words using context (e.g. "vprnd"="VP R&D", "checkpoint"="Check Point", "avigen"="Evigene").
-Return ONLY valid JSON, no markdown, no explanation:
-{"firstName":"","lastName":"","company":"","jobTitle":"","score":3,"notes":""}
-score must be integer 1-5. Use best guess even if unclear. Never return empty strings if you can infer the value.
-Transcript: "${transcript.trim()}"`
-        }]
-      })
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 400, messages })
     });
     const data = await resp.json();
     const raw = (data.content?.[0]?.text || '').replace(/```json|```/g,'').trim();
@@ -329,12 +361,13 @@ Transcript: "${transcript.trim()}"`
   } catch(e) {
     const idx = leads.findIndex(l => l.id === lead.id);
     if (idx !== -1) { leads[idx].processing = false; saveLeads(); renderLeads(); }
-    toast('Processing error. Try again.');
+    toast('Error: ' + (e.message || 'Try again'));
   }
 }
 
 function saveLeads() {
-  localStorage.setItem('cz_leads_v4', JSON.stringify(leads));
+  const toSave = leads.map(l => { const {audioUrl, ...rest} = l; return rest; });
+  localStorage.setItem('cz_leads_v4', JSON.stringify(toSave));
 }
 
 function deleteLead(id) {
