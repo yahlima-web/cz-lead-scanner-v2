@@ -8,13 +8,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CZ Leads">
-<meta name="theme-color" content="#0D1B3E">
+<meta name="theme-color" content="#ffffff">
 <title>CZ Lead Scanner</title>
 <link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --navy:#0D1B3E;--purple:#6B5CE7;--blue:#38B6FF;
-  --orange:#F5A623;--coral:#F0624B;--lpurple:#A78BFA;
+  --orange:#F5A623;--coral:#F0624B;
   --bg:#F0F0F0;--surface:#ffffff;--border:rgba(13,27,62,0.08);
   --text:#0D1B3E;--text2:#5a6a8a;--text3:#9aaccc;
   --radius:16px;--rsm:10px;
@@ -48,13 +48,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Wix Ma
 .stimer{font-size:13px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums}
 .transcript-box{background:var(--surface);border-radius:var(--rsm);padding:14px;margin-bottom:14px;box-shadow:0 1px 6px rgba(13,27,62,0.05)}
 .tr-label{font-size:10px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
-.tr-text{font-size:13px;color:var(--text2);line-height:1.6}
+.tr-text{font-size:13px;color:var(--text2);line-height:1.6;min-height:40px}
 .proc-card{background:var(--surface);border-radius:var(--radius);padding:18px;margin-top:14px;text-align:center;display:none;box-shadow:0 2px 12px rgba(13,27,62,0.06)}
 .proc-card.show{display:block}
 .proc-spin{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin 0.75s linear infinite;margin:0 auto 10px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .ptxt{font-size:13px;color:var(--text2)}
-.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px;background:var(--bg)}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px}
 .stat{background:var(--surface);border-radius:var(--rsm);padding:14px 10px;text-align:center;box-shadow:0 1px 6px rgba(13,27,62,0.05)}
 .stat-n{font-size:26px;font-weight:800;color:var(--navy);line-height:1}
 .stat-n.cg{color:#22c55e}
@@ -71,10 +71,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Wix Ma
 .lco{font-size:12px;color:var(--text2);margin-bottom:4px;font-weight:500}
 .lnotes{font-size:12px;color:var(--text2);line-height:1.5}
 .ltime{font-size:10px;color:var(--text3);margin-top:3px}
-.dbtn{background:transparent;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:4px;flex-shrink:0;transition:color 0.15s}
-.dbtn:hover{color:var(--coral)}
-.laudio{width:100%;height:32px;border-radius:var(--rsm);margin-top:4px}
+.dbtn{background:transparent;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:4px;flex-shrink:0}
+.laudio{width:100%;height:36px;border-radius:var(--rsm);margin-top:6px}
 .ltranscript{font-size:11px;color:var(--text3);line-height:1.5;margin-top:8px;padding:8px 10px;background:var(--bg);border-radius:var(--rsm)}
+.email-btn{width:100%;background:var(--purple);color:#fff;border:none;border-radius:var(--rsm);padding:10px;font-size:12px;font-weight:600;font-family:'Wix Madefor Display',sans-serif;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px}
+.email-preview{font-size:12px;color:var(--text2);line-height:1.6;margin-top:8px;padding:10px;background:#f0f0ff;border-radius:var(--rsm);border-left:3px solid var(--purple);white-space:pre-wrap}
 .export-bar{padding:16px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
 .export-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:var(--rsm);padding:16px;font-size:14px;font-weight:700;font-family:'Wix Madefor Display',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity 0.2s;box-shadow:0 4px 16px rgba(13,27,62,0.2)}
 .export-btn:active{opacity:0.85}
@@ -196,36 +197,49 @@ async function startRecording() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     audioChunks = []; liveTranscript = '';
+
+    // iOS Safari supports audio/mp4, Chrome supports audio/webm
     const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' :
                      MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' :
-                     MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '';
-    mediaRecorder = mimeType ? new MediaRecorder(stream, {mimeType}) : new MediaRecorder(stream);
+                     MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' :
+                     MediaRecorder.isTypeSupported('audio/aac') ? 'audio/aac' : '';
+
+    try {
+      mediaRecorder = mimeType ? new MediaRecorder(stream, {mimeType}) : new MediaRecorder(stream);
+    } catch(e) {
+      mediaRecorder = new MediaRecorder(stream);
+    }
+
     mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
     mediaRecorder.onstop = () => {
       stream.getTracks().forEach(t => t.stop());
-      const finalMime = mimeType || mediaRecorder.mimeType || 'audio/webm';
-      processRecording(new Blob(audioChunks, { type: finalMime }), liveTranscript);
+      const finalMime = mediaRecorder.mimeType || mimeType || 'audio/webm';
+      const blob = new Blob(audioChunks, { type: finalMime });
+      processRecording(blob, liveTranscript, finalMime);
     };
     mediaRecorder.start(100);
     isRecording = true;
 
+    // Speech recognition — works on Chrome/Android, not iOS
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SR) {
-      recognition = new SR();
-      recognition.lang = 'en-US'; recognition.continuous = true; recognition.interimResults = true;
-      recognition.onresult = (e) => {
-        let final = '', interim = '';
-        for (let i = 0; i < e.results.length; i++) {
-          if (e.results[i].isFinal) final += e.results[i][0].transcript + ' ';
-          else interim += e.results[i][0].transcript;
-        }
-        liveTranscript = final;
-        document.getElementById('trtext').textContent = (final + interim).trim() || 'Listening...';
-      };
-      recognition.onerror = () => {};
-      try { recognition.start(); } catch(e) {}
+      try {
+        recognition = new SR();
+        recognition.lang = 'en-US'; recognition.continuous = true; recognition.interimResults = true;
+        recognition.onresult = (e) => {
+          let final = '', interim = '';
+          for (let i = 0; i < e.results.length; i++) {
+            if (e.results[i].isFinal) final += e.results[i][0].transcript + ' ';
+            else interim += e.results[i][0].transcript;
+          }
+          liveTranscript = final;
+          document.getElementById('trtext').textContent = (final + interim).trim() || 'Listening...';
+        };
+        recognition.onerror = () => {};
+        recognition.start();
+      } catch(e) {}
     } else {
-      document.getElementById('trtext').textContent = 'Recording... (transcript on iOS after saving)';
+      document.getElementById('trtext').textContent = 'Recording... Claude will transcribe after saving.';
     }
 
     secs = 0;
@@ -252,13 +266,13 @@ function stopRecording() {
   document.getElementById('stimer').textContent = '';
 }
 
-async function processRecording(blob, transcript) {
+async function processRecording(blob, transcript, mimeType) {
   const audioUrl = URL.createObjectURL(blob);
   const lead = {
     id: Date.now(),
     firstName: '', lastName: '', company: '', jobTitle: '',
     score: 3, notes: '', transcript: transcript.trim(),
-    audioUrl,
+    audioUrl, mimeType,
     time: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}),
     date: new Date().toLocaleDateString('en-US'),
     conf: localStorage.getItem('cz_conf') || '',
@@ -272,38 +286,61 @@ async function processRecording(blob, transcript) {
   document.getElementById('trtext').textContent = 'Start recording to see live transcript...';
   switchTab('leads');
 
-  if (transcript.trim().length > 3) {
-    try {
-      const resp = await fetch('https://cz-lead-proxy.yahlima.workers.dev', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 400,
-          messages: [{
-            role: 'user',
-            content: `You are a sales assistant at a B2B tech conference. Extract lead info from this voice transcript.\nTemplate: "First name [first]. Last name [last]. Company [company]. Job title [title]. Lead score [1-5]. What we discussed [notes]."\nCorrect unclear words using context (e.g. "vprnd"="VP R&D", "checkpoint"="Check Point").\nReturn ONLY valid JSON, no markdown, no explanation:\n{"firstName":"","lastName":"","company":"","jobTitle":"","score":3,"notes":""}\nscore must be integer 1-5. Best guess if unclear.\nTranscript: "${transcript.trim()}"`
-          }]
-        })
-      });
-      const data = await resp.json();
-      const raw = (data.content?.[0]?.text || '').replace(/```json|```/g,'').trim();
-      const parsed = JSON.parse(raw);
-      const idx = leads.findIndex(l => l.id === lead.id);
-      if (idx !== -1) {
-        leads[idx] = { ...leads[idx], ...parsed, score: parseInt(parsed.score)||3, processing: false };
-        saveLeads(); renderLeads();
-        const name = [parsed.firstName, parsed.lastName].filter(Boolean).join(' ') || 'Lead';
-        toast('✓ ' + name + ' saved!');
+  // Convert blob to base64
+  const b64 = await new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = () => res(reader.result.split(',')[1]);
+    reader.onerror = rej;
+    reader.readAsDataURL(blob);
+  });
+
+  // Determine media type for Claude
+  const claudeMime = mimeType.includes('mp4') || mimeType.includes('aac') ? 'audio/mp4' : 'audio/webm';
+
+  try {
+    const resp = await fetch('https://cz-lead-proxy.yahlima.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 500,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `You are a sales assistant at a B2B tech conference. Listen to this audio recording and extract lead info.\nThe person is following this template: "First name [first]. Last name [last]. Company [company]. Job title [title]. Lead score [1-5]. What we discussed [notes]."\nCorrect unclear or mispronounced words using context (e.g. "vprnd"="VP R&D", "checkpoint"="Check Point").\nReturn ONLY valid JSON, no markdown:\n{"firstName":"","lastName":"","company":"","jobTitle":"","score":3,"notes":""}\nscore must be integer 1-5.`
+            },
+            {
+              type: 'document',
+              source: {
+                type: 'base64',
+                media_type: claudeMime,
+                data: b64
+              }
+            }
+          ]
+        }]
+      })
+    });
+    const data = await resp.json();
+    const raw = (data.content?.[0]?.text || '').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(raw);
+    const idx = leads.findIndex(l => l.id === lead.id);
+    if (idx !== -1) {
+      leads[idx] = { ...leads[idx], ...parsed, score: parseInt(parsed.score)||3, processing: false };
+      if (parsed.firstName || parsed.lastName) {
+        leads[idx].transcript = `${parsed.firstName} ${parsed.lastName} | ${parsed.company} | ${parsed.jobTitle}`.trim();
       }
-    } catch(e) {
-      const idx = leads.findIndex(l => l.id === lead.id);
-      if (idx !== -1) { leads[idx].processing = false; saveLeads(); renderLeads(); }
-      toast('Saved (processing error)');
+      saveLeads(); renderLeads();
+      const name = [parsed.firstName, parsed.lastName].filter(Boolean).join(' ') || 'Lead';
+      toast('&#10003; ' + name + ' saved!');
     }
-  } else {
+  } catch(e) {
+    // Fallback: if no transcript from speech recognition, show error
     const idx = leads.findIndex(l => l.id === lead.id);
     if (idx !== -1) { leads[idx].processing = false; saveLeads(); renderLeads(); }
+    toast('Error processing audio');
   }
 }
 
@@ -319,6 +356,42 @@ function deleteLead(id) {
   toast('Lead deleted');
 }
 
+async function generateEmail(id) {
+  const lead = leads.find(l => l.id === id);
+  if (!lead) return;
+  const btn = document.getElementById('ebtn-' + id);
+  btn.textContent = 'Generating...';
+  btn.disabled = true;
+  try {
+    const resp = await fetch('https://cz-lead-proxy.yahlima.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 400,
+        messages: [{
+          role: 'user',
+          content: `Write a short personalized follow-up email for a B2B sales lead met at a conference.
+Lead: ${lead.firstName} ${lead.lastName}, ${lead.jobTitle} at ${lead.company}.
+What we discussed: ${lead.notes || lead.transcript}.
+Write a warm, professional email (5-6 sentences max). Subject line + body. No placeholders.`
+        }]
+      })
+    });
+    const data = await resp.json();
+    const email = data.content?.[0]?.text || '';
+    const preview = document.getElementById('eprev-' + id);
+    preview.textContent = email;
+    preview.style.display = 'block';
+    btn.textContent = '&#128231; Regenerate Email';
+    btn.disabled = false;
+  } catch(e) {
+    btn.textContent = '&#128231; Generate Email';
+    btn.disabled = false;
+    toast('Error generating email');
+  }
+}
+
 function renderLeads() {
   const today = new Date().toLocaleDateString('en-US');
   document.getElementById('sTotal').textContent = leads.length;
@@ -332,8 +405,8 @@ function renderLeads() {
   }
   el.innerHTML = leads.map((l, i) => {
     const sc = Math.max(1, Math.min(5, parseInt(l.score)||3));
-    const name = [l.firstName, l.lastName].filter(Boolean).join(' ') || '&#8212;';
-    const meta = [l.jobTitle, l.company].filter(Boolean).join(' &middot; ') || '&#8212;';
+    const name = [l.firstName, l.lastName].filter(Boolean).join(' ') || '&mdash;';
+    const meta = [l.jobTitle, l.company].filter(Boolean).join(' &middot; ') || '&mdash;';
     return `<div class="lead-card">
       <div class="lct">
         <div class="sbox" style="background:${scoreColor(sc)}">${i+1}</div>
@@ -348,6 +421,10 @@ function renderLeads() {
       </div>
       ${l.audioUrl ? `<audio class="laudio" controls src="${l.audioUrl}"></audio>` : ''}
       ${l.transcript ? `<div class="ltranscript">&#128221; ${l.transcript}</div>` : ''}
+      ${!l.processing ? `
+        <button class="email-btn" id="ebtn-${l.id}" onclick="generateEmail(${l.id})">&#128231; Generate Follow-up Email</button>
+        <div class="email-preview" id="eprev-${l.id}" style="display:none"></div>
+      ` : ''}
     </div>`;
   }).join('');
   document.getElementById('exportBtn').disabled = false;
@@ -390,7 +467,7 @@ function clearAll() {
 
 function toast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
+  t.innerHTML = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
