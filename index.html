@@ -134,8 +134,11 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         </div>
         <div class="rec-timer" id="recTimer"></div>
         <div class="rec-status" id="recStatus">Tap to start recording</div>
-        <button id="stopBtn" onclick="stopRecording()" style="display:none;margin-top:16px;background:var(--red);color:#fff;border:none;border-radius:var(--radius-sm);padding:12px 32px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;letter-spacing:0.3px;">
-          ⏹ STOP &amp; SAVE
+
+      </div>
+      <div id="stopWrap" style="display:none;text-align:center;margin:12px 0;">
+        <button id="stopBtn" style="background:var(--red);color:#fff;border:none;border-radius:var(--radius-sm);padding:16px 48px;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;width:100%;letter-spacing:0.5px;" onclick="stopRecording()">
+          ⏹ &nbsp; STOP &amp; SAVE
         </button>
       </div>
       <div class="transcript-box" id="transcriptBox">
@@ -221,7 +224,7 @@ function startRecording() {
   recognition.start();
   isRec = true; secs = 0;
   setUI('recording');
-  document.getElementById('stopBtn').style.display = 'block';
+  document.getElementById('stopWrap').style.display = 'block';
   timerInt = setInterval(() => {
     secs++;
     document.getElementById('recTimer').textContent =
@@ -232,7 +235,7 @@ function startRecording() {
 function stopRecording() {
   isRec = false;
   clearInterval(timerInt);
-  document.getElementById('stopBtn').style.display = 'none';
+  document.getElementById('stopWrap').style.display = 'none';
   if (recognition) recognition.stop();
 }
 
