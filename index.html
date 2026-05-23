@@ -307,7 +307,7 @@ async function processRecording(blob, transcript) {
   // Now extract data from transcript via Claude
   if (transcript.trim().length > 3) {
     try {
-      const resp = await fetch('/.netlify/functions/claude', {
+      const resp = await fetch('https://cz-lead-proxy.yahlima.workers.dev', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
