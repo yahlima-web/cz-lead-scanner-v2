@@ -6,116 +6,114 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="CZ Lead Scanner">
-<meta name="theme-color" content="#060d1a">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CZ Leads">
+<meta name="theme-color" content="#0D1B3E">
 <title>CZ Lead Scanner</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #060d1a; --surface: #111e33; --surface2: #172540;
-  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
-  --accent: #00c2ff; --accent2: #0057ff; --accent-glow: rgba(0,194,255,0.15);
-  --text: #eef2ff; --text2: #7a93b8; --text3: #3d5478;
-  --green: #00e5a0; --amber: #ffb342; --red: #ff4d6a;
-  --radius: 14px; --radius-sm: 9px;
+  --navy: #0D1B3E;
+  --purple: #6B5CE7;
+  --blue: #38B6FF;
+  --orange: #F5A623;
+  --coral: #F0624B;
+  --lpurple: #A78BFA;
+  --bg: #F0F0F0;
+  --surface: #ffffff;
+  --border: rgba(13,27,62,0.08);
+  --text: #0D1B3E;
+  --text2: #5a6a8a;
+  --text3: #9aaccc;
+  --radius: 16px;
+  --rsm: 10px;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow: hidden; }
-#app { height: 100vh; display: flex; flex-direction: column; }
-#app::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0; background-image: linear-gradient(rgba(0,194,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,194,255,0.03) 1px, transparent 1px); background-size: 40px 40px; }
-.topbar { position: relative; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 48px 20px 14px; background: linear-gradient(180deg, rgba(6,13,26,0.98), rgba(6,13,26,0.9)); border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.logo { display: flex; align-items: center; gap: 10px; }
-.logo-mark { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--accent2), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; }
-.logo-text { font-size: 15px; font-weight: 600; }
-.logo-sub { font-size: 11px; color: var(--text2); }
-.badge { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(0,194,255,0.2); font-size: 11px; font-weight: 600; font-family: 'DM Mono', monospace; padding: 4px 10px; border-radius: 20px; }
-.tabs { display: flex; position: relative; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.tab { flex: 1; padding: 11px 0; font-size: 12px; font-weight: 500; color: var(--text3); text-align: center; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; letter-spacing: 0.3px; text-transform: uppercase; }
-.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.page { flex: 1; overflow-y: auto; display: none; position: relative; z-index: 5; }
-.page.active { display: block; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Wix Madefor Display',sans-serif;overflow:hidden}
+#app{height:100vh;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:52px 20px 14px;background:var(--navy);flex-shrink:0}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:34px;height:34px;border-radius:10px;background:var(--purple);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff}
+.logo-text{font-size:16px;font-weight:700;color:#fff}
+.logo-sub{font-size:11px;color:rgba(255,255,255,0.5)}
+.badge{background:rgba(255,255,255,0.12);color:#fff;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2)}
+.tabs{display:flex;background:var(--navy);border-bottom:1px solid rgba(255,255,255,0.1);flex-shrink:0}
+.tab{flex:1;padding:12px 0;font-size:12px;font-weight:600;color:rgba(255,255,255,0.4);text-align:center;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;letter-spacing:0.5px;text-transform:uppercase;font-family:'Wix Madefor Display',sans-serif}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.page{flex:1;overflow-y:auto;display:none;background:var(--bg)}
+.page.active{display:block}
 
-/* RECORD PAGE */
-.rec-page { padding: 20px; }
-.template-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 18px; position: relative; overflow: hidden; }
-.template-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); }
-.template-label { font-size: 10px; font-weight: 600; color: var(--accent); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 8px; }
-.template-text { font-size: 13px; color: var(--text2); line-height: 1.7; }
-.template-text span { color: var(--text); font-weight: 500; }
+/* RECORD */
+.rec-page{padding:20px}
+.template-card{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:16px;border-left:4px solid var(--purple);box-shadow:0 2px 12px rgba(13,27,62,0.06)}
+.template-label{font-size:10px;font-weight:700;color:var(--purple);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:8px}
+.template-text{font-size:13px;color:var(--text2);line-height:1.7}
+.template-text span{color:var(--navy);font-weight:600}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.btn-rec{background:var(--coral);color:#fff;border:none;border-radius:var(--radius);padding:18px;font-size:15px;font-weight:700;font-family:'Wix Madefor Display',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(240,98,75,0.3);transition:opacity 0.2s}
+.btn-rec:active{opacity:0.85}
+.btn-stop{background:var(--surface);color:var(--text2);border:2px solid var(--border);border-radius:var(--radius);padding:18px;font-size:15px;font-weight:700;font-family:'Wix Madefor Display',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s}
+.btn-stop.active{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 4px 16px rgba(13,27,62,0.25)}
+.status-bar{background:var(--surface);border-radius:var(--rsm);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 6px rgba(13,27,62,0.05)}
+.sdot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0}
+.sdot.rec{background:var(--coral);animation:blink 1s infinite}
+.sdot.proc{background:var(--blue);animation:blink 0.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.stxt{font-size:13px;color:var(--text2);flex:1}
+.stimer{font-size:13px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums}
+.transcript-box{background:var(--surface);border-radius:var(--rsm);padding:14px;margin-bottom:14px;box-shadow:0 1px 6px rgba(13,27,62,0.05)}
+.tlabel{font-size:10px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.ttext{font-size:13px;color:var(--text2);line-height:1.6}
+.proc-card{background:var(--surface);border-radius:var(--radius);padding:18px;margin-top:14px;text-align:center;display:none;box-shadow:0 2px 12px rgba(13,27,62,0.06)}
+.proc-card.show{display:block}
+.proc-spin{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin 0.75s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ptxt{font-size:13px;color:var(--text2)}
 
-.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-.rec-start-btn { background: linear-gradient(135deg, #cc1133, var(--red)); color: #fff; border: none; border-radius: var(--radius); padding: 18px; font-size: 16px; font-weight: 700; font-family: 'DM Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
-.rec-start-btn:active { opacity: 0.85; }
-.rec-stop-btn { background: var(--surface2); color: var(--text2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 18px; font-size: 16px; font-weight: 700; font-family: 'DM Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
-.rec-stop-btn.active { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; border-color: transparent; }
-.rec-stop-btn.active:active { opacity: 0.85; }
+/* LEADS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px;background:var(--bg)}
+.stat{background:var(--surface);border-radius:var(--rsm);padding:14px 10px;text-align:center;box-shadow:0 1px 6px rgba(13,27,62,0.05)}
+.stat-n{font-size:26px;font-weight:800;color:var(--navy);line-height:1}
+.stat-n.cg{color:#22c55e}
+.stat-n.cb{color:var(--blue)}
+.stat-l{font-size:10px;color:var(--text3);margin-top:4px;letter-spacing:0.5px;text-transform:uppercase;font-weight:600}
+.empty-state{text-align:center;padding:56px 24px;color:var(--text3);font-size:13px;line-height:2}
+.empty-icon{font-size:42px;margin-bottom:8px}
+.leads-list{padding:0 16px 16px}
+.lead-card{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 2px 12px rgba(13,27,62,0.06)}
+.lct{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px}
+.sbox{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0;color:#fff}
+.lbody{flex:1;min-width:0}
+.lname{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.lco{font-size:12px;color:var(--text2);margin-bottom:4px;font-weight:500}
+.lnotes{font-size:12px;color:var(--text2);line-height:1.5}
+.ltime{font-size:10px;color:var(--text3);margin-top:3px}
+.dbtn{background:transparent;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:4px;flex-shrink:0;transition:color 0.15s}
+.dbtn:hover{color:var(--coral)}
+.laudio{width:100%;height:32px;border-radius:var(--rsm);margin-top:4px}
+.ltranscript{font-size:11px;color:var(--text3);line-height:1.5;margin-top:8px;padding:8px 10px;background:var(--bg);border-radius:var(--rsm)}
+.export-bar{padding:16px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.export-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:var(--rsm);padding:16px;font-size:14px;font-weight:700;font-family:'Wix Madefor Display',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity 0.2s;box-shadow:0 4px 16px rgba(13,27,62,0.2)}
+.export-btn:active{opacity:0.85}
+.export-btn:disabled{opacity:0.35;cursor:default}
 
-.status-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
-.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
-.status-dot.recording { background: var(--red); animation: blink 1s infinite; }
-.status-dot.processing { background: var(--accent); animation: blink 0.5s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-.status-text { font-size: 13px; color: var(--text2); }
-.status-timer { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); margin-left: auto; }
+/* SETTINGS */
+.settings-page{padding:20px}
+.slabel{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.scard{background:var(--surface);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;box-shadow:0 1px 6px rgba(13,27,62,0.05)}
+.srow{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.srow:last-child{border-bottom:none}
+.srow-l{font-size:13px;color:var(--text);font-weight:500}
+.srow-v{font-size:13px;color:var(--text2)}
+.sdel{background:transparent;border:1px solid rgba(240,98,75,0.3);color:var(--coral);font-family:'Wix Madefor Display',sans-serif;font-size:12px;font-weight:600;padding:5px 13px;border-radius:7px;cursor:pointer}
+.inpw{background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);overflow:hidden;margin-bottom:6px;box-shadow:0 1px 4px rgba(13,27,62,0.05)}
+.inpw input{width:100%;background:transparent;border:none;outline:none;color:var(--text);font-family:'Wix Madefor Display',sans-serif;font-size:13px;padding:13px 14px}
+.inpw input::placeholder{color:var(--text3)}
+.shint{font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:20px}
+.sver{font-size:11px;color:var(--text3);text-align:center;line-height:1.8}
 
-.transcript-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 14px; min-height: 60px; }
-.transcript-label { font-size: 10px; font-weight: 600; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
-.transcript-text { font-size: 13px; color: var(--text2); line-height: 1.6; }
-
-/* LEADS PAGE */
-.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
-.stat { background: var(--bg); padding: 14px 10px; text-align: center; }
-.stat-n { font-size: 24px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--text); line-height: 1; }
-.stat-n.c-green { color: var(--green); }
-.stat-n.c-accent { color: var(--accent); }
-.stat-l { font-size: 10px; color: var(--text3); margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase; font-weight: 500; }
-.empty-state { text-align: center; padding: 56px 24px; color: var(--text3); font-size: 13px; line-height: 2; }
-.empty-icon { font-size: 42px; margin-bottom: 8px; }
-
-.lead-card { padding: 14px 16px; border-bottom: 1px solid var(--border); }
-.lead-card-top { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
-.lead-num { font-size: 10px; font-weight: 600; color: var(--text3); font-family: 'DM Mono', monospace; min-width: 24px; padding-top: 13px; text-align: center; }
-.score-dot { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; font-family: 'DM Mono', monospace; flex-shrink: 0; }
-.s5 { background: rgba(0,229,160,0.1); color: var(--green); }
-.s4 { background: rgba(0,229,160,0.06); color: #4dffbe; }
-.s3 { background: rgba(255,179,66,0.1); color: var(--amber); }
-.s2 { background: rgba(255,77,106,0.08); color: #ff7a8a; }
-.s1 { background: rgba(255,77,106,0.05); color: #ffaaaa; }
-.lead-body { flex: 1; min-width: 0; }
-.lead-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-.lead-co { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
-.lead-notes { font-size: 12px; color: var(--text2); line-height: 1.5; }
-.lead-time { font-size: 10px; color: var(--text3); margin-top: 3px; font-family: 'DM Mono', monospace; }
-.del-btn { background: transparent; border: none; color: var(--text3); font-size: 18px; cursor: pointer; padding: 4px 8px; flex-shrink: 0; transition: color 0.15s; }
-.del-btn:hover { color: var(--red); }
-
-.lead-audio { width: 100%; height: 36px; border-radius: var(--radius-sm); }
-.lead-transcript { font-size: 11px; color: var(--text3); line-height: 1.5; margin-top: 6px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); }
-
-.processing-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--accent); background: var(--accent-glow); padding: 4px 10px; border-radius: 20px; margin-top: 6px; }
-
-.export-bar { padding: 16px 20px; border-top: 1px solid var(--border); background: var(--bg); flex-shrink: 0; }
-.export-btn { width: 100%; background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; border: none; border-radius: var(--radius-sm); padding: 15px; font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
-.export-btn:active { opacity: 0.85; }
-.export-btn:disabled { opacity: 0.35; cursor: default; }
-
-.settings-page { padding: 24px 20px; }
-.s-label { font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
-.s-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
-.s-row { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-.s-row:last-child { border-bottom: none; }
-.s-row-label { font-size: 13px; color: var(--text); }
-.s-row-val { font-size: 13px; color: var(--text2); font-family: 'DM Mono', monospace; }
-.s-del { background: transparent; border: 1px solid rgba(255,77,106,0.3); color: var(--red); font-family: 'DM Sans', sans-serif; font-size: 12px; padding: 5px 13px; border-radius: 7px; cursor: pointer; }
-.inp-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; margin-bottom: 6px; overflow: hidden; }
-.inp-wrap input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 13px 14px; }
-.inp-wrap input::placeholder { color: var(--text3); }
-.s-hint { font-size: 11px; color: var(--text3); line-height: 1.6; margin-bottom: 20px; }
-.s-version { font-size: 11px; color: var(--text3); text-align: center; line-height: 1.8; }
-
-.toast { position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--surface2); border: 1px solid var(--border2); color: var(--text); font-size: 12px; font-weight: 500; padding: 9px 18px; border-radius: 20px; opacity: 0; transition: all 0.25s; pointer-events: none; white-space: nowrap; z-index: 999; }
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--navy);color:#fff;font-size:12px;font-weight:600;padding:10px 20px;border-radius:20px;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;z-index:999;box-shadow:0 4px 16px rgba(13,27,62,0.25)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
@@ -139,21 +137,22 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         <div class="template-label">Recording Template</div>
         <div class="template-text">"First name: <span>[first]</span>. Last name: <span>[last]</span>. Company: <span>[company]</span>. Job title: <span>[title]</span>. Lead score <span>[1-5]</span>. What we discussed: <span>[notes]</span>."</div>
       </div>
-
       <div class="btn-row">
-        <button class="rec-start-btn" id="startBtn" onclick="startRecording()">🎙 Record</button>
-        <button class="rec-stop-btn" id="stopBtn" onclick="stopRecording()">⏹ Stop & Save</button>
+        <button class="btn-rec" onclick="startRecording()">🎙 Record</button>
+        <button class="btn-stop" id="stopBtn" onclick="stopRecording()">⏹ Stop & Save</button>
       </div>
-
       <div class="status-bar">
-        <div class="status-dot" id="statusDot"></div>
-        <div class="status-text" id="statusText">Ready to record</div>
-        <div class="status-timer" id="statusTimer"></div>
+        <div class="sdot" id="sdot"></div>
+        <div class="stxt" id="stxt">Ready to record</div>
+        <div class="stimer" id="stimer"></div>
       </div>
-
       <div class="transcript-box">
-        <div class="transcript-label">Live Transcript</div>
-        <div class="transcript-text" id="transcriptText">Start recording to see live transcript...</div>
+        <div class="tlabel">Live Transcript</div>
+        <div class="ttext" id="ttext">Start recording to see live transcript...</div>
+      </div>
+      <div class="proc-card" id="procCard">
+        <div class="proc-spin"></div>
+        <div class="ptxt" id="ptxt">Extracting lead info...</div>
       </div>
     </div>
   </div>
@@ -161,10 +160,10 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   <div class="page" id="page-leads">
     <div class="stats-row">
       <div class="stat"><div class="stat-n" id="sTotal">0</div><div class="stat-l">Total</div></div>
-      <div class="stat"><div class="stat-n c-green" id="sHot">0</div><div class="stat-l">Hot (4-5)</div></div>
-      <div class="stat"><div class="stat-n c-accent" id="sToday">0</div><div class="stat-l">Today</div></div>
+      <div class="stat"><div class="stat-n cg" id="sHot">0</div><div class="stat-l">Hot (4-5)</div></div>
+      <div class="stat"><div class="stat-n cb" id="sToday">0</div><div class="stat-l">Today</div></div>
     </div>
-    <div id="leadsList"></div>
+    <div class="leads-list" id="leadsList"></div>
     <div class="export-bar">
       <button class="export-btn" id="exportBtn" onclick="exportExcel()" disabled>⬇ Export to Excel</button>
     </div>
@@ -172,16 +171,16 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
   <div class="page" id="page-settings">
     <div class="settings-page">
-      <div class="s-label">Conference Name</div>
-      <div class="inp-wrap" style="margin-bottom:6px">
+      <div class="slabel">Conference Name</div>
+      <div class="inpw" style="margin-bottom:6px">
         <input type="text" id="confInput" placeholder="e.g. AWS re:Invent 2025" oninput="saveConf()">
       </div>
-      <div class="s-hint">Used as the filename when exporting Excel.</div>
-      <div class="s-card">
-        <div class="s-row"><div class="s-row-label">Saved leads</div><div class="s-row-val" id="savedCnt">0</div></div>
-        <div class="s-row"><div class="s-row-label">Clear all data</div><button class="s-del" onclick="clearAll()">Delete all</button></div>
+      <div class="shint">Used as the filename when exporting Excel.</div>
+      <div class="scard">
+        <div class="srow"><div class="srow-l">Saved leads</div><div class="srow-v" id="savedCnt">0</div></div>
+        <div class="srow"><div class="srow-l">Clear all data</div><button class="sdel" onclick="clearAll()">Delete all</button></div>
       </div>
-      <div class="s-version">CloudZone Lead Scanner v4.0<br>Powered by Claude AI</div>
+      <div class="sver">CloudZone Lead Scanner v4.0<br>Powered by Claude AI · a Matrix company</div>
     </div>
   </div>
 </div>
@@ -189,24 +188,25 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const API_KEY = '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';
-
 let leads = JSON.parse(localStorage.getItem('cz_leads_v4') || '[]');
-let mediaRecorder = null;
-let audioChunks = [];
-let timerInt = null;
-let secs = 0;
-let isRecording = false;
-let recognition = null;
-let liveTranscript = '';
+let mediaRecorder = null, audioChunks = [], timerInt = null;
+let secs = 0, isRecording = false, recognition = null, liveTranscript = '';
 
-function switchTab(name) {
+function scoreColor(s) {
+  if (s >= 5) return '#22c55e';
+  if (s >= 4) return '#38B6FF';
+  if (s >= 3) return '#F5A623';
+  if (s >= 2) return '#F0624B';
+  return '#9aaccc';
+}
+
+function switchTab(n) {
   ['record','leads','settings'].forEach(t => {
-    document.getElementById('tab-'+t).classList.toggle('active', t===name);
-    document.getElementById('page-'+t).classList.toggle('active', t===name);
+    document.getElementById('tab-'+t).classList.toggle('active', t===n);
+    document.getElementById('page-'+t).classList.toggle('active', t===n);
   });
-  if (name==='leads') renderLeads();
-  if (name==='settings') {
+  if (n==='leads') renderLeads();
+  if (n==='settings') {
     document.getElementById('confInput').value = localStorage.getItem('cz_conf') || '';
     document.getElementById('savedCnt').textContent = leads.length;
   }
@@ -218,26 +218,27 @@ async function startRecording() {
   if (isRecording) return;
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioChunks = [];
-    liveTranscript = '';
+    audioChunks = []; liveTranscript = '';
 
-    mediaRecorder = new MediaRecorder(stream);
+    // Try to use webm, fallback to mp4 for iOS
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' :
+                     MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '';
+    mediaRecorder = mimeType ? new MediaRecorder(stream, {mimeType}) : new MediaRecorder(stream);
+
     mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
     mediaRecorder.onstop = () => {
       stream.getTracks().forEach(t => t.stop());
-      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      const blob = new Blob(audioChunks, { type: mimeType || 'audio/webm' });
       processRecording(blob, liveTranscript);
     };
     mediaRecorder.start(100);
     isRecording = true;
 
-    // Start speech recognition for live transcript
+    // Speech recognition for live transcript (works on Chrome/Android, not iOS)
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SR) {
       recognition = new SR();
-      recognition.lang = 'en-US';
-      recognition.continuous = true;
-      recognition.interimResults = true;
+      recognition.lang = 'en-US'; recognition.continuous = true; recognition.interimResults = true;
       recognition.onresult = (e) => {
         let final = '', interim = '';
         for (let i = 0; i < e.results.length; i++) {
@@ -245,28 +246,24 @@ async function startRecording() {
           else interim += e.results[i][0].transcript;
         }
         liveTranscript = final;
-        document.getElementById('transcriptText').textContent = final + interim || 'Listening...';
+        document.getElementById('ttext').textContent = final + interim || 'Listening...';
       };
       recognition.onerror = () => {};
-      recognition.start();
+      try { recognition.start(); } catch(e) {}
+    } else {
+      document.getElementById('ttext').textContent = 'Recording... (transcript available after saving)';
     }
 
     secs = 0;
-    document.getElementById('statusDot').className = 'status-dot recording';
-    document.getElementById('statusText').textContent = 'Recording...';
+    document.getElementById('sdot').className = 'sdot rec';
+    document.getElementById('stxt').textContent = 'Recording...';
     document.getElementById('stopBtn').classList.add('active');
-    document.getElementById('transcriptText').textContent = 'Listening...';
-
     timerInt = setInterval(() => {
       secs++;
-      const m = String(Math.floor(secs/60)).padStart(2,'0');
-      const s = String(secs%60).padStart(2,'0');
-      document.getElementById('statusTimer').textContent = m+':'+s;
+      document.getElementById('stimer').textContent =
+        String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
     }, 1000);
-
-  } catch(e) {
-    toast('Microphone access denied');
-  }
+  } catch(e) { toast('Microphone access denied'); }
 }
 
 function stopRecording() {
@@ -275,62 +272,47 @@ function stopRecording() {
   clearInterval(timerInt);
   if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
   if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-  document.getElementById('statusDot').className = 'status-dot processing';
-  document.getElementById('statusText').textContent = 'Processing...';
+  document.getElementById('sdot').className = 'sdot proc';
+  document.getElementById('stxt').textContent = 'Processing...';
   document.getElementById('stopBtn').classList.remove('active');
-  document.getElementById('statusTimer').textContent = '';
+  document.getElementById('stimer').textContent = '';
 }
 
 async function processRecording(blob, transcript) {
   const audioUrl = URL.createObjectURL(blob);
-  const time = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
-  const date = new Date().toLocaleDateString('en-US');
-  const conf = localStorage.getItem('cz_conf') || '';
-
-  // Save lead with audio immediately
   const lead = {
     id: Date.now(),
     firstName: '', lastName: '', company: '', jobTitle: '',
     score: 3, notes: '', transcript: transcript.trim(),
-    audioUrl, time, date, conf, processing: true
+    audioUrl, time: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}),
+    date: new Date().toLocaleDateString('en-US'),
+    conf: localStorage.getItem('cz_conf') || '',
+    processing: true
   };
-
   leads.push(lead);
-  saveleads();
-  updateBadge();
-  toast('Recording saved! Processing...');
-  document.getElementById('statusDot').className = 'status-dot';
-  document.getElementById('statusText').textContent = 'Ready to record';
-  document.getElementById('transcriptText').textContent = 'Start recording to see live transcript...';
+  saveLeads(); updateBadge();
+  toast('Saved! Processing...');
+  document.getElementById('sdot').className = 'sdot';
+  document.getElementById('stxt').textContent = 'Ready to record';
+  document.getElementById('ttext').textContent = 'Start recording to see live transcript...';
   switchTab('leads');
 
-  // Now extract data from transcript via Claude
   if (transcript.trim().length > 3) {
     try {
       const resp = await fetch('https://cz-lead-proxy.yahlima.workers.dev', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: 400,
           messages: [{
             role: 'user',
             content: `You are a sales assistant at a B2B tech conference. Extract lead info from this voice transcript.
-The person was following this template: "First name [first]. Last name [last]. Company [company]. Job title [title]. Lead score [1-5]. What we discussed [notes]."
-
-Even if words are unclear or mispronounced, use context to figure out the correct values.
-For example: "vprnd" likely means "VP R&D", "checkpoint" is likely the company "Check Point", etc.
-
-Return ONLY valid JSON, no markdown, no explanation:
+Template used: "First name [first]. Last name [last]. Company [company]. Job title [title]. Lead score [1-5]. What we discussed [notes]."
+Use context to correct unclear or mispronounced words (e.g. "vprnd" = "VP R&D", "checkpoint" = "Check Point").
+Return ONLY valid JSON, no markdown:
 {"firstName":"","lastName":"","company":"","jobTitle":"","score":3,"notes":""}
-
-Rules:
-- score must be integer 1-5 (5=very hot, 4=interested, 3=neutral, 2=cold, 1=not relevant)
-- Use your best guess even if transcript is unclear
-- Empty string only if truly cannot determine
-
+score must be integer 1-5. Best guess if unclear.
 Transcript: "${transcript.trim()}"`
           }]
         })
@@ -340,36 +322,29 @@ Transcript: "${transcript.trim()}"`
       const parsed = JSON.parse(raw);
       const idx = leads.findIndex(l => l.id === lead.id);
       if (idx !== -1) {
-        leads[idx] = { ...leads[idx], ...parsed, score: parseInt(parsed.score) || 3, processing: false };
-        console.log('Lead saved:', leads[idx]);
-        saveleads();
-        renderLeads();
-        const name = [parsed.firstName, parsed.lastName].filter(Boolean).join(' ') || 'Lead';
-        toast('✓ ' + name + ' saved!');
+        leads[idx] = { ...leads[idx], ...parsed, score: parseInt(parsed.score)||3, processing: false };
+        saveLeads(); renderLeads();
+        toast('✓ ' + ([parsed.firstName, parsed.lastName].filter(Boolean).join(' ') || 'Lead') + ' saved!');
       }
     } catch(e) {
       const idx = leads.findIndex(l => l.id === lead.id);
-      if (idx !== -1) { leads[idx].processing = false; saveleads(); renderLeads(); }
-      toast('Saved (could not extract data)');
+      if (idx !== -1) { leads[idx].processing = false; saveLeads(); renderLeads(); }
     }
   } else {
     const idx = leads.findIndex(l => l.id === lead.id);
-    if (idx !== -1) { leads[idx].processing = false; saveleads(); renderLeads(); }
+    if (idx !== -1) { leads[idx].processing = false; saveLeads(); renderLeads(); }
   }
 }
 
-function saveleads() {
-  // Save without audioUrl (can't store blobs in localStorage)
-  const toSave = leads.map(l => { const {audioUrl, ...rest} = l; return rest; });
-  localStorage.setItem('cz_leads_v4', JSON.stringify(toSave));
+function saveLeads() {
+  const s = leads.map(l => { const {audioUrl,...r} = l; return r; });
+  localStorage.setItem('cz_leads_v4', JSON.stringify(s));
 }
 
 function deleteLead(id) {
   if (!confirm('Delete this lead?')) return;
   leads = leads.filter(l => l.id !== id);
-  saveleads();
-  updateBadge();
-  renderLeads();
+  saveLeads(); updateBadge(); renderLeads();
   toast('Lead deleted');
 }
 
@@ -389,20 +364,19 @@ function renderLeads() {
     const name = [l.firstName, l.lastName].filter(Boolean).join(' ') || '—';
     const meta = [l.jobTitle, l.company].filter(Boolean).join(' · ') || '—';
     return `<div class="lead-card">
-      <div class="lead-card-top">
-        <div class="lead-num">#${i+1}</div>
-        <div class="score-dot s${sc}">${sc}</div>
-        <div class="lead-body">
-          <div class="lead-name">${name}</div>
-          <div class="lead-co">${meta}</div>
-          ${l.notes ? `<div class="lead-notes">${l.notes}</div>` : ''}
-          <div class="lead-time">${l.time||''} ${l.conf ? '· '+l.conf : ''}</div>
-          ${l.processing ? `<div class="processing-badge">⌛ Processing...</div>` : ''}
+      <div class="lct">
+        <div class="sbox" style="background:${scoreColor(sc)}">${i+1}</div>
+        <div class="lbody">
+          <div class="lname">${name}</div>
+          <div class="lco">${meta}</div>
+          ${l.notes ? `<div class="lnotes">${l.notes}</div>` : ''}
+          <div class="ltime">${l.time||''}${l.conf?' · '+l.conf:''}</div>
+          ${l.processing ? `<div style="font-size:11px;color:#38B6FF;margin-top:4px">⌛ Processing...</div>` : ''}
         </div>
-        <button class="del-btn" onclick="deleteLead(${l.id})">✕</button>
+        <button class="dbtn" onclick="deleteLead(${l.id})">✕</button>
       </div>
-      ${l.audioUrl ? `<audio class="lead-audio" controls src="${l.audioUrl}"></audio>` : ''}
-      ${l.transcript ? `<div class="lead-transcript">📝 ${l.transcript}</div>` : ''}
+      ${l.audioUrl ? `<audio class="laudio" controls src="${l.audioUrl}"></audio>` : ''}
+      ${l.transcript ? `<div class="ltranscript">📝 ${l.transcript}</div>` : ''}
     </div>`;
   }).join('');
   document.getElementById('exportBtn').disabled = false;
@@ -410,41 +384,30 @@ function renderLeads() {
 
 function updateBadge() {
   const n = leads.length;
-  document.getElementById('topBadge').textContent = n + (n===1 ? ' lead' : ' leads');
+  document.getElementById('topBadge').textContent = n + (n===1?' lead':' leads');
 }
 
 function exportExcel() {
   if (!leads.length) { toast('No leads to export'); return; }
   const rows = leads.map((l, i) => ({
-    '#': i + 1,
-    'First Name': l.firstName || '',
-    'Last Name': l.lastName || '',
-    'Company': l.company || '',
-    'Job Title': l.jobTitle || '',
-    'Lead Score': l.score || '',
-    'Discussion Notes': l.notes || '',
-    'Transcript': l.transcript || '',
-    'Time': l.time || '',
-    'Date': l.date || '',
-    'Conference': l.conf || ''
+    '#': i+1, 'First Name': l.firstName||'', 'Last Name': l.lastName||'',
+    'Company': l.company||'', 'Job Title': l.jobTitle||'', 'Lead Score': l.score||'',
+    'Discussion Notes': l.notes||'', 'Transcript': l.transcript||'',
+    'Time': l.time||'', 'Date': l.date||'', 'Conference': l.conf||''
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
   ws['!cols'] = [5,14,14,20,20,10,40,60,10,12,20].map(w=>({wch:w}));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Leads');
   const conf = (localStorage.getItem('cz_conf')||'Conference').replace(/\s+/g,'_');
-  const date = new Date().toLocaleDateString('en-US').replace(/\//g,'-');
-  XLSX.writeFile(wb, `CZ_Leads_${conf}_${date}.xlsx`);
+  XLSX.writeFile(wb, `CZ_Leads_${conf}_${new Date().toLocaleDateString('en-US').replace(/\//g,'-')}.xlsx`);
   toast('Excel downloaded — ' + leads.length + ' leads ✓');
 }
 
 function clearAll() {
   if (!confirm('Delete ALL ' + leads.length + ' leads?')) return;
-  leads = [];
-  localStorage.removeItem('cz_leads_v4');
-  updateBadge();
-  renderLeads();
-  toast('All leads cleared');
+  leads = []; localStorage.removeItem('cz_leads_v4');
+  updateBadge(); renderLeads(); toast('All leads cleared');
 }
 
 function toast(msg) {
