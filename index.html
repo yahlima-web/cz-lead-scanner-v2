@@ -307,22 +307,30 @@ async function processRecording(blob, transcript) {
   // Now extract data from transcript via Claude
   if (transcript.trim().length > 3) {
     try {
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      const resp = await fetch('/.netlify/functions/claude', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': API_KEY,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
         },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 400,
           messages: [{
             role: 'user',
-            content: `Extract lead info from this sales conference transcript. Return ONLY valid JSON, no markdown:
+            content: `You are a sales assistant at a B2B tech conference. Extract lead info from this voice transcript.
+The person was following this template: "First name [first]. Last name [last]. Company [company]. Job title [title]. Lead score [1-5]. What we discussed [notes]."
+
+Even if words are unclear or mispronounced, use context to figure out the correct values.
+For example: "vprnd" likely means "VP R&D", "checkpoint" is likely the company "Check Point", etc.
+
+Return ONLY valid JSON, no markdown, no explanation:
 {"firstName":"","lastName":"","company":"","jobTitle":"","score":3,"notes":""}
-score: integer 1-5 (5=very hot). Empty string if not mentioned.
+
+Rules:
+- score must be integer 1-5 (5=very hot, 4=interested, 3=neutral, 2=cold, 1=not relevant)
+- Use your best guess even if transcript is unclear
+- Empty string only if truly cannot determine
+
 Transcript: "${transcript.trim()}"`
           }]
         })
@@ -332,7 +340,8 @@ Transcript: "${transcript.trim()}"`
       const parsed = JSON.parse(raw);
       const idx = leads.findIndex(l => l.id === lead.id);
       if (idx !== -1) {
-        leads[idx] = { ...leads[idx], ...parsed, score: parseInt(parsed.score)||3, processing: false };
+        leads[idx] = { ...leads[idx], ...parsed, score: parseInt(parsed.score) || 3, processing: false };
+        console.log('Lead saved:', leads[idx]);
         saveleads();
         renderLeads();
         const name = [parsed.firstName, parsed.lastName].filter(Boolean).join(' ') || 'Lead';
