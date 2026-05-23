@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CZ Lead Scanner">
+<meta name="theme-color" content="#060d1a">
+<link rel="manifest" href="manifest.json">
+<title>CZ Lead Scanner</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060d1a; --surface: #111e33; --surface2: #172540;
+  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
+  --accent: #00c2ff; --accent2: #0057ff; --accent-glow: rgba(0,194,255,0.15);
+  --text: #eef2ff; --text2: #7a93b8; --text3: #3d5478;
+  --green: #00e5a0; --amber: #ffb342; --red: #ff4d6a;
+  --radius: 14px; --radius-sm: 9px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow: hidden; }
+#app { height: 100vh; display: flex; flex-direction: column; }
+#app::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0; background-image: linear-gradient(rgba(0,194,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,194,255,0.03) 1px, transparent 1px); background-size: 40px 40px; }
+.topbar { position: relative; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 48px 20px 14px; background: linear-gradient(180deg, rgba(6,13,26,0.98), rgba(6,13,26,0.9)); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-mark { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--accent2), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; }
+.logo-text { font-size: 15px; font-weight: 600; }
+.logo-sub { font-size: 11px; color: var(--text2); }
+.badge { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(0,194,255,0.2); font-size: 11px; font-weight: 600; font-family: 'DM Mono', monospace; padding: 4px 10px; border-radius: 20px; }
+.tabs { display: flex; position: relative; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.tab { flex: 1; padding: 11px 0; font-size: 12px; font-weight: 500; color: var(--text3); text-align: center; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; letter-spacing: 0.3px; text-transform: uppercase; }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.page { flex: 1; overflow-y: auto; display: none; position: relative; z-index: 5; }
+.page.active { display: block; }
+.rec-page { padding: 20px; }
+.template-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 18px; position: relative; overflow: hidden; }
+.template-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); }
+.template-label { font-size: 10px; font-weight: 600; color: var(--accent); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 8px; }
+.template-text { font-size: 13px; color: var(--text2); line-height: 1.7; }
+.template-text span { color: var(--text); font-weight: 500; }
+.rec-center { display: flex; flex-direction: column; align-items: center; padding: 16px 0 20px; }
+.rec-outer { width: 148px; height: 148px; border-radius: 50%; border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; margin-bottom: 18px; transition: all 0.3s; }
+.rec-outer.recording { border-color: rgba(255,77,106,0.4); animation: outerPulse 1.5s ease-in-out infinite; }
+.rec-outer.processing { border-color: rgba(0,194,255,0.4); }
+@keyframes outerPulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,106,0.2)} 50%{box-shadow:0 0 0 16px rgba(255,77,106,0)} }
+.rec-btn { width: 108px; height: 108px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border2); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; gap: 5px; transition: all 0.18s; }
+.rec-btn.recording { background: rgba(255,77,106,0.15); border-color: rgba(255,77,106,0.3); }
+.rec-btn.processing { background: var(--accent-glow); border-color: rgba(0,194,255,0.2); }
+.rec-btn-icon { font-size: 30px; line-height: 1; }
+.rec-btn-lbl { font-size: 10px; font-weight: 600; color: var(--text2); letter-spacing: 0.8px; text-transform: uppercase; }
+.rec-timer { font-family: 'DM Mono', monospace; font-size: 38px; font-weight: 500; color: var(--text); letter-spacing: -1px; min-height: 46px; }
+.rec-status { font-size: 13px; color: var(--text2); margin-top: 5px; text-align: center; }
+.transcript-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-top: 16px; font-size: 13px; color: var(--text2); line-height: 1.6; display: none; }
+.transcript-box.show { display: block; }
+.transcript-label { font-size: 10px; font-weight: 600; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.proc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-top: 14px; text-align: center; display: none; }
+.proc-card.show { display: block; }
+.proc-spin { width: 28px; height: 28px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 10px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.proc-txt { font-size: 12px; color: var(--text2); }
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
+.stat { background: var(--bg); padding: 14px 10px; text-align: center; }
+.stat-n { font-size: 24px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--text); line-height: 1; }
+.stat-n.c-green { color: var(--green); }
+.stat-n.c-accent { color: var(--accent); }
+.stat-l { font-size: 10px; color: var(--text3); margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase; font-weight: 500; }
+.empty-state { text-align: center; padding: 56px 24px; color: var(--text3); font-size: 13px; line-height: 2; }
+.empty-icon { font-size: 42px; margin-bottom: 8px; }
+.lead-card { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: flex-start; }
+.lead-num { font-size: 10px; font-weight: 600; color: var(--text3); font-family: 'DM Mono', monospace; min-width: 24px; padding-top: 13px; text-align: center; }
+.score-dot { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; font-family: 'DM Mono', monospace; flex-shrink: 0; }
+.s5 { background: rgba(0,229,160,0.1); color: var(--green); }
+.s4 { background: rgba(0,229,160,0.06); color: #4dffbe; }
+.s3 { background: rgba(255,179,66,0.1); color: var(--amber); }
+.s2 { background: rgba(255,77,106,0.08); color: #ff7a8a; }
+.s1 { background: rgba(255,77,106,0.05); color: #ffaaaa; }
+.lead-body { flex: 1; min-width: 0; }
+.lead-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.lead-co { font-size: 12px; color: var(--text2); margin-bottom: 5px; }
+.lead-notes { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.lead-time { font-size: 10px; color: var(--text3); margin-top: 4px; font-family: 'DM Mono', monospace; }
+.del-btn { background: transparent; border: none; color: var(--text3); font-size: 18px; cursor: pointer; padding: 4px 8px; flex-shrink: 0; transition: color 0.15s; }
+.del-btn:hover { color: var(--red); }
+.export-bar { padding: 16px 20px; border-top: 1px solid var(--border); background: var(--bg); flex-shrink: 0; }
+.export-btn { width: 100%; background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; border: none; border-radius: var(--radius-sm); padding: 15px; font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
+.export-btn:active { opacity: 0.85; }
+.export-btn:disabled { opacity: 0.35; cursor: default; }
+.settings-page { padding: 24px 20px; }
+.s-label { font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+.s-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+.s-row { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.s-row:last-child { border-bottom: none; }
+.s-row-label { font-size: 13px; color: var(--text); }
+.s-row-val { font-size: 13px; color: var(--text2); font-family: 'DM Mono', monospace; }
+.s-del { background: transparent; border: 1px solid rgba(255,77,106,0.3); color: var(--red); font-family: 'DM Sans', sans-serif; font-size: 12px; padding: 5px 13px; border-radius: 7px; cursor: pointer; }
+.inp-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; margin-bottom: 6px; overflow: hidden; }
+.inp-wrap input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 13px 14px; }
+.inp-wrap input::placeholder { color: var(--text3); }
+.s-hint { font-size: 11px; color: var(--text3); line-height: 1.6; margin-bottom: 20px; }
+.s-version { font-size: 11px; color: var(--text3); text-align: center; line-height: 1.8; }
+.toast { position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--surface2); border: 1px solid var(--border2); color: var(--text); font-size: 12px; font-weight: 500; padding: 9px 18px; border-radius: 20px; opacity: 0; transition: all 0.25s; pointer-events: none; white-space: nowrap; z-index: 999; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-mark">CZ</div>
+      <div><div class="logo-text">Lead Scanner</div><div class="logo-sub">Conference Intelligence</div></div>
+    </div>
+    <div class="badge" id="topBadge">0 leads</div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" id="tab-record" onclick="switchTab('record')">Record</div>
+    <div class="tab" id="tab-leads" onclick="switchTab('leads')">Leads</div>
+    <div class="tab" id="tab-settings" onclick="switchTab('settings')">Settings</div>
+  </div>
+  <div class="page active" id="page-record">
+    <div class="rec-page">
+      <div class="template-card">
+        <div class="template-label">Recording Template</div>
+        <div class="template-text">"First name: <span>[first]</span>. Last name: <span>[last]</span>. Company: <span>[company]</span>. Job title: <span>[title]</span>. Lead score <span>[1-5]</span>. What we discussed: <span>[notes]</span>."</div>
+      </div>
+      <div class="rec-center">
+        <div class="rec-outer" id="recOuter">
+          <button class="rec-btn" id="recBtn" onclick="toggleRecord()">
+            <div class="rec-btn-icon" id="recIcon">🎙</div>
+            <div class="rec-btn-lbl" id="recLbl">Record</div>
+          </button>
+        </div>
+        <div class="rec-timer" id="recTimer"></div>
+        <div class="rec-status" id="recStatus">Tap to start recording</div>
+      </div>
+      <div class="transcript-box" id="transcriptBox">
+        <div class="transcript-label">Live Transcript</div>
+        <div id="transcriptText"></div>
+      </div>
+      <div class="proc-card" id="procCard">
+        <div class="proc-spin"></div>
+        <div class="proc-txt" id="procTxt">Extracting lead info...</div>
+      </div>
+    </div>
+  </div>
+  <div class="page" id="page-leads">
+    <div class="stats-row">
+      <div class="stat"><div class="stat-n" id="sTotal">0</div><div class="stat-l">Total</div></div>
+      <div class="stat"><div class="stat-n c-green" id="sHot">0</div><div class="stat-l">Hot (4-5)</div></div>
+      <div class="stat"><div class="stat-n c-accent" id="sToday">0</div><div class="stat-l">Today</div></div>
+    </div>
+    <div id="leadsList"></div>
+    <div class="export-bar">
+      <button class="export-btn" id="exportBtn" onclick="exportExcel()" disabled>⬇ Export to Excel</button>
+    </div>
+  </div>
+  <div class="page" id="page-settings">
+    <div class="settings-page">
+      <div class="s-label">Conference Name</div>
+      <div class="inp-wrap" style="margin-bottom:6px">
+        <input type="text" id="confInput" placeholder="e.g. AWS re:Invent 2025" oninput="saveConf()">
+      </div>
+      <div class="s-hint">Used as the filename when exporting Excel.</div>
+      <div class="s-card">
+        <div class="s-row"><div class="s-row-label">Saved leads</div><div class="s-row-val" id="savedCnt">0</div></div>
+        <div class="s-row"><div class="s-row-label">Clear all data</div><button class="s-del" onclick="clearAll()">Delete all</button></div>
+      </div>
+      <div class="s-version">CloudZone Lead Scanner v3.0<br>Powered by Claude AI</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+let leads = JSON.parse(localStorage.getItem('cz_leads_v3') || '[]');
+let isRec = false, recognition = null, timerInt, secs = 0, transcript = '';
+
+function switchTab(name) {
+  ['record','leads','settings'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t===name);
+    document.getElementById('page-'+t).classList.toggle('active', t===name);
+  });
+  if (name==='leads') renderLeads();
+  if (name==='settings') {
+    document.getElementById('confInput').value = localStorage.getItem('cz_conf') || '';
+    document.getElementById('savedCnt').textContent = leads.length;
+  }
+}
+
+function saveConf() { localStorage.setItem('cz_conf', document.getElementById('confInput').value.trim()); }
+
+function toggleRecord() {
+  if (isRec) { stopRecording(); return; }
+  startRecording();
+}
+
+function startRecording() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast('Use Chrome browser for recording'); return; }
+  transcript = '';
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.onresult = (e) => {
+    let final = '', interim = '';
+    for (let i = 0; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript + ' ';
+      else interim += e.results[i][0].transcript;
+    }
+    transcript = final;
+    document.getElementById('transcriptBox').classList.add('show');
+    document.getElementById('transcriptText').textContent = final + interim;
+  };
+  recognition.onerror = (e) => { toast('Mic error: ' + e.error); setUI('idle'); isRec = false; };
+  recognition.onend = () => { if (isRec) { isRec = false; processTranscript(transcript); } };
+  recognition.start();
+  isRec = true; secs = 0;
+  setUI('recording');
+  timerInt = setInterval(() => {
+    secs++;
+    document.getElementById('recTimer').textContent =
+      String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
+  }, 1000);
+}
+
+function stopRecording() {
+  isRec = false;
+  clearInterval(timerInt);
+  if (recognition) recognition.stop();
+}
+
+function setUI(state) {
+  document.getElementById('recBtn').className = 'rec-btn' + (state==='idle' ? '' : ' '+state);
+  document.getElementById('recOuter').className = 'rec-outer' + (state==='idle' ? '' : ' '+state);
+  if (state==='recording') {
+    document.getElementById('recIcon').textContent = '⏹';
+    document.getElementById('recLbl').textContent = 'STOP';
+    document.getElementById('recStatus').textContent = 'Recording... tap to stop';
+  } else if (state==='processing') {
+    document.getElementById('recIcon').textContent = '⌛';
+    document.getElementById('recLbl').textContent = '';
+    document.getElementById('recStatus').textContent = 'Processing...';
+    document.getElementById('recTimer').textContent = '';
+    document.getElementById('procCard').classList.add('show');
+  } else {
+    document.getElementById('recIcon').textContent = '🎙';
+    document.getElementById('recLbl').textContent = 'Record';
+    document.getElementById('recStatus').textContent = 'Tap to start recording';
+    document.getElementById('recTimer').textContent = '';
+    document.getElementById('procCard').classList.remove('show');
+  }
+}
+
+async function processTranscript(text) {
+  if (!text || text.trim().length < 3) { toast('No speech detected. Try again.'); setUI('idle'); return; }
+  setUI('processing');
+  try {
+    const resp = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        messages: [{
+          role: 'user',
+          content: `Extract lead info from this sales conference transcript. Return ONLY valid JSON, no markdown, no extra text:
+{"firstName":"","lastName":"","company":"","jobTitle":"","score":3,"notes":""}
+Rules: score is integer 1-5 (5=very hot, 1=not relevant). Use empty string if field not mentioned.
+Transcript: "${text.trim()}"`
+        }]
+      })
+    });
+    const data = await resp.json();
+    const raw = (data.content?.[0]?.text || '').replace(/```json|```/g,'').trim();
+    let lead;
+    try { lead = JSON.parse(raw); } catch(e) { toast('Could not parse. Try again.'); setUI('idle'); return; }
+    lead.score = parseInt(lead.score) || 3;
+    lead.time = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+    lead.date = new Date().toLocaleDateString('en-US');
+    lead.conf = localStorage.getItem('cz_conf') || '';
+    lead.transcript = text.trim();
+    leads.push(lead);
+    localStorage.setItem('cz_leads_v3', JSON.stringify(leads));
+    updateBadge();
+    const name = [lead.firstName, lead.lastName].filter(Boolean).join(' ') || 'Lead';
+    toast('✓ ' + name + ' saved!');
+    document.getElementById('transcriptBox').classList.remove('show');
+    document.getElementById('transcriptText').textContent = '';
+  } catch(e) {
+    toast('Error: ' + e.message);
+  }
+  setUI('idle');
+}
+
+function deleteLead(idx) {
+  if (!confirm('Delete this lead?')) return;
+  leads.splice(idx, 1);
+  localStorage.setItem('cz_leads_v3', JSON.stringify(leads));
+  updateBadge();
+  renderLeads();
+  toast('Lead deleted');
+}
+
+function renderLeads() {
+  const today = new Date().toLocaleDateString('en-US');
+  document.getElementById('sTotal').textContent = leads.length;
+  document.getElementById('sHot').textContent = leads.filter(l=>l.score>=4).length;
+  document.getElementById('sToday').textContent = leads.filter(l=>l.date===today).length;
+  const el = document.getElementById('leadsList');
+  if (!leads.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>No leads yet.<br>Go to Record tab to start.</div>';
+    document.getElementById('exportBtn').disabled = true;
+    return;
+  }
+  el.innerHTML = leads.map((l, i) => {
+    const sc = Math.max(1, Math.min(5, parseInt(l.score)||3));
+    const name = [l.firstName, l.lastName].filter(Boolean).join(' ') || '—';
+    const meta = [l.jobTitle, l.company].filter(Boolean).join(' · ') || '—';
+    return `<div class="lead-card">
+      <div class="lead-num">#${i+1}</div>
+      <div class="score-dot s${sc}">${sc}</div>
+      <div class="lead-body">
+        <div class="lead-name">${name}</div>
+        <div class="lead-co">${meta}</div>
+        ${l.notes ? `<div class="lead-notes">${l.notes}</div>` : ''}
+        <div class="lead-time">${l.time||''} ${l.conf ? '· '+l.conf : ''}</div>
+      </div>
+      <button class="del-btn" onclick="deleteLead(${i})">✕</button>
+    </div>`;
+  }).join('');
+  document.getElementById('exportBtn').disabled = false;
+}
+
+function updateBadge() {
+  const n = leads.length;
+  document.getElementById('topBadge').textContent = n + (n===1 ? ' lead' : ' leads');
+}
+
+function exportExcel() {
+  if (!leads.length) { toast('No leads to export'); return; }
+  const rows = leads.map((l, i) => ({
+    '#': i + 1,
+    'First Name': l.firstName || '',
+    'Last Name': l.lastName || '',
+    'Company': l.company || '',
+    'Job Title': l.jobTitle || '',
+    'Lead Score': l.score || '',
+    'Discussion Notes': l.notes || '',
+    'Transcript': l.transcript || '',
+    'Time': l.time || '',
+    'Date': l.date || '',
+    'Conference': l.conf || ''
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [5,14,14,20,20,10,40,50,10,12,20].map(w=>({wch:w}));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+  const conf = (localStorage.getItem('cz_conf')||'Conference').replace(/\s+/g,'_');
+  const date = new Date().toLocaleDateString('en-US').replace(/\//g,'-');
+  XLSX.writeFile(wb, `CZ_Leads_${conf}_${date}.xlsx`);
+  toast('Excel downloaded — ' + leads.length + ' leads ✓');
+}
+
+function clearAll() {
+  if (!confirm('Delete ALL ' + leads.length + ' leads?')) return;
+  leads = [];
+  localStorage.removeItem('cz_leads_v3');
+  updateBadge();
+  renderLeads();
+  toast('All leads cleared');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+updateBadge();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
