@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -126,13 +127,16 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       </div>
       <div class="rec-center">
         <div class="rec-outer" id="recOuter">
-          <button class="rec-btn" id="recBtn" onclick="toggleRecord()">
+          <button class="rec-btn" id="recBtn" onclick="startRecording()">
             <div class="rec-btn-icon" id="recIcon">🎙</div>
             <div class="rec-btn-lbl" id="recLbl">Record</div>
           </button>
         </div>
         <div class="rec-timer" id="recTimer"></div>
         <div class="rec-status" id="recStatus">Tap to start recording</div>
+        <button id="stopBtn" onclick="stopRecording()" style="display:none;margin-top:16px;background:var(--red);color:#fff;border:none;border-radius:var(--radius-sm);padding:12px 32px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;letter-spacing:0.3px;">
+          ⏹ STOP &amp; SAVE
+        </button>
       </div>
       <div class="transcript-box" id="transcriptBox">
         <div class="transcript-label">Live Transcript</div>
@@ -191,7 +195,6 @@ function switchTab(name) {
 function saveConf() { localStorage.setItem('cz_conf', document.getElementById('confInput').value.trim()); }
 
 function toggleRecord() {
-  if (isRec) { stopRecording(); return; }
   startRecording();
 }
 
@@ -218,6 +221,7 @@ function startRecording() {
   recognition.start();
   isRec = true; secs = 0;
   setUI('recording');
+  document.getElementById('stopBtn').style.display = 'block';
   timerInt = setInterval(() => {
     secs++;
     document.getElementById('recTimer').textContent =
@@ -228,6 +232,7 @@ function startRecording() {
 function stopRecording() {
   isRec = false;
   clearInterval(timerInt);
+  document.getElementById('stopBtn').style.display = 'none';
   if (recognition) recognition.stop();
 }
 
