@@ -88,7 +88,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Wix Ma
 .inpw input::placeholder{color:var(--text3)}
 .shint{font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:20px}
 .sver{font-size:11px;color:var(--text3);text-align:center;line-height:1.8}
-.syncing-badge{font-size:10px;color:var(--blue);margin-top:2px}
 .toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--navy);color:#fff;font-size:12px;font-weight:600;padding:10px 20px;border-radius:20px;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;z-index:999;box-shadow:0 4px 16px rgba(13,27,62,0.25)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -96,7 +95,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Wix Ma
 <body>
 <div id="app">
   <div class="topbar">
-    <img src="https://www.cloudzone.io/hs-fs/hubfs/CloudZone%20Logo%20(1).png" style="height:26px;object-fit:contain" alt="CloudZone" onerror="this.style.display='none'">
+    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQwIiBoZWlnaHQ9IjI4IiB2aWV3Qm94PSIwIDAgMTQwIDI4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjx0ZXh0IHg9IjAiIHk9IjIyIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTgiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMwRDFCM0UiPkNsb3VkWm9uZTwvdGV4dD48L3N2Zz4=" style="height:26px;object-fit:contain" alt="CloudZone">
     <div class="badge" id="topBadge">0 leads</div>
   </div>
   <div class="tabs">
@@ -146,11 +145,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Wix Ma
         <input type="text" id="confInput" placeholder="e.g. AWS re:Invent 2025" oninput="saveConf()">
       </div>
       <div class="shint">Used as the filename when exporting Excel.</div>
+      <div class="slabel" style="margin-top:8px">Anthropic API Key</div>
+      <div class="inpw" style="margin-bottom:6px">
+        <input type="password" id="apiKeyInput" placeholder="sk-ant-..." oninput="saveApiKey()">
+      </div>
+      <div class="shint">Stored locally on this device only.</div>
       <div class="scard">
         <div class="srow"><div class="srow-l">Saved leads</div><div class="srow-v" id="savedCnt">0</div></div>
         <div class="srow"><div class="srow-l">Clear all data</div><button class="sdel" onclick="clearAll()">Delete all</button></div>
       </div>
-      <div class="sver">CloudZone Lead Scanner v4.1<br>Powered by Claude AI &middot; a Matrix company</div>
+      <div class="sver">CloudZone Lead Scanner v5.0<br>Powered by Claude AI &middot; a Matrix company</div>
     </div>
   </div>
 </div>
@@ -158,11 +162,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Wix Ma
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-// ─── CONFIG ───────────────────────────────────────────────
-const WORKER = 'https://cz-lead-proxy.yahlima.workers.dev';
-
 // ─── STATE ────────────────────────────────────────────────
-let leads = [];
+let leads = JSON.parse(localStorage.getItem('cz_leads_v5') || '[]');
 let mediaRecorder = null;
 let audioChunks = [];
 let timerInt = null;
@@ -171,56 +172,36 @@ let isRecording = false;
 let recognition = null;
 let liveTranscript = '';
 
-// ─── LOAD LEADS ON STARTUP ────────────────────────────────
-// FIX #2: Always load from server first, fall back to localStorage
-async function loadLeads() {
-  try {
-    const resp = await fetch(WORKER + '/leads');
-    if (resp.ok) {
-      leads = await resp.json();
-      // Keep localStorage in sync
-      saveLeadsLocal();
-    } else {
-      throw new Error('server error');
-    }
-  } catch(e) {
-    // Offline fallback
-    leads = JSON.parse(localStorage.getItem('cz_leads_v4') || '[]');
-  }
-  updateBadge();
-  renderLeads();
+// ─── API KEY ──────────────────────────────────────────────
+// API key stored locally — no server needed
+function getApiKey() {
+  return localStorage.getItem('cz_api_key') || '';
+}
+function saveApiKey() {
+  localStorage.setItem('cz_api_key', document.getElementById('apiKeyInput').value.trim());
 }
 
-// FIX #2: Sync a lead to server immediately (upsert)
-async function syncLeadToServer(lead) {
-  try {
-    const toSend = { ...lead };
-    delete toSend.audioUrl; // never send blob URL to server
-    await fetch(WORKER + '/leads', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(toSend)
-    });
-  } catch(e) {
-    console.log('Sync error (offline?):', e.message);
-  }
-}
-
-// Save to localStorage (backup)
-function saveLeadsLocal() {
-  const toSave = leads.map(l => { const {audioUrl, ...rest} = l; return rest; });
-  localStorage.setItem('cz_leads_v4', JSON.stringify(toSave));
+// ─── SAVE ─────────────────────────────────────────────────
+function saveLeads() {
+  localStorage.setItem('cz_leads_v5', JSON.stringify(leads));
 }
 
 // ─── RECORDING ────────────────────────────────────────────
 async function startRecording() {
   if (isRecording) return;
+
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    toast('Please add your API key in Settings first');
+    switchTab('settings');
+    return;
+  }
+
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     audioChunks = [];
     liveTranscript = '';
 
-    // Pick best supported mime type
     const mimeType =
       MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' :
       MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' :
@@ -234,18 +215,15 @@ async function startRecording() {
       if (e.data.size > 0) audioChunks.push(e.data);
     };
 
-    // FIX #1: blob is built here — pass it to processRecording
     mediaRecorder.onstop = () => {
       stream.getTracks().forEach(t => t.stop());
-      const mType = mediaRecorder.mimeType || 'audio/webm';
-      const blob = new Blob(audioChunks, { type: mType });
-      processRecording(liveTranscript, blob);
+      processRecording(liveTranscript);
     };
 
     mediaRecorder.start(100);
     isRecording = true;
 
-    // Speech Recognition (Chrome desktop + Android)
+    // Speech Recognition
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SR) {
       try {
@@ -263,14 +241,9 @@ async function startRecording() {
           document.getElementById('trtext').textContent =
             (final + interim).trim() || 'Listening...';
         };
-        recognition.onerror = (e) => {
-          if (e.error === 'not-allowed') toast('Microphone permission denied');
-        };
+        recognition.onerror = () => {};
         recognition.onend = () => {
-          // Restart if still recording (iOS kills after silence)
-          if (isRecording) {
-            try { recognition.start(); } catch(e) {}
-          }
+          if (isRecording) try { recognition.start(); } catch(e) {}
         };
         recognition.start();
       } catch(e) {
@@ -280,7 +253,6 @@ async function startRecording() {
       document.getElementById('trtext').textContent = 'Recording... speak clearly following the template.';
     }
 
-    // UI
     secs = 0;
     document.getElementById('sdot').className = 'sdot rec';
     document.getElementById('stxt').textContent = 'Recording...';
@@ -312,26 +284,24 @@ function stopRecording() {
     recognition = null;
   }
 
-  // onstop fires → processRecording(transcript, blob)
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
     mediaRecorder.stop();
   }
 }
 
 // ─── PROCESS ──────────────────────────────────────────────
-async function processRecording(transcript, audioBlob) {
-  const hasText = transcript.trim().length > 3;
+async function processRecording(transcript) {
+  const apiKey = getApiKey();
 
-  // FIX #1: if no text AND no blob, show error
-  if (!hasText && !audioBlob) {
+  if (!transcript || transcript.trim().length < 3) {
     document.getElementById('sdot').className = 'sdot';
     document.getElementById('stxt').textContent = 'Ready to record';
     document.getElementById('trtext').textContent = 'Start recording to see live transcript...';
-    toast('No audio detected. Please try again.');
+    toast('No speech detected. Try again.');
     return;
   }
 
-  // Create lead skeleton
+  // Save lead skeleton
   const lead = {
     id: Date.now(),
     firstName: '', lastName: '', company: '', jobTitle: '',
@@ -344,72 +314,45 @@ async function processRecording(transcript, audioBlob) {
   };
 
   leads.push(lead);
-  saveLeadsLocal();
+  saveLeads();
   updateBadge();
+  toast('Processing...');
 
-  // FIX #2: Sync skeleton immediately so other devices see "processing"
-  await syncLeadToServer(lead);
-
-  toast('Saved! Extracting info...');
   document.getElementById('sdot').className = 'sdot';
   document.getElementById('stxt').textContent = 'Ready to record';
   document.getElementById('trtext').textContent = 'Start recording to see live transcript...';
   switchTab('leads');
 
   try {
-    let messages;
-
-    if (hasText) {
-      // Desktop / Android: use text transcript (cheaper, faster, more reliable)
-      messages = [{
-        role: 'user',
-        content: `You are a sales assistant at a B2B tech conference. Extract lead info from this voice transcript.
-Template: "First name [first]. Last name [last]. Company [company]. Job title [title]. Lead score [1-5]. What we discussed [notes]."
-Correct unclear words using context (e.g. "vprnd"="VP R&D", "checkpoint"="Check Point").
-Return ONLY valid JSON, no markdown:
-{"firstName":"","lastName":"","company":"","jobTitle":"","score":3,"notes":""}
-score must be integer 1-5.
-Transcript: "${transcript.trim()}"`
-      }];
-
-    } else {
-      // iOS fallback: no transcript available — send audio blob to Claude
-      const b64 = await new Promise((res, rej) => {
-        const reader = new FileReader();
-        reader.onload = () => res(reader.result.split(',')[1]);
-        reader.onerror = rej;
-        reader.readAsDataURL(audioBlob);
-      });
-      const mime = audioBlob.type.includes('mp4') ? 'audio/mp4' : 'audio/webm';
-      messages = [{
-        role: 'user',
-        content: [
-          {
-            type: 'text',
-            text: `Listen to this audio from a sales conference and extract lead info.
-Template: "First name [first]. Last name [last]. Company [company]. Job title [title]. Lead score [1-5]. What we discussed [notes]."
-Return ONLY valid JSON, no markdown:
-{"firstName":"","lastName":"","company":"","jobTitle":"","score":3,"notes":""}
-score must be integer 1-5.`
-          },
-          {
-            type: 'document',
-            source: { type: 'base64', media_type: mime, data: b64 }
-          }
-        ]
-      }];
-    }
-
-    const resp = await fetch(WORKER, {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 400,
-        messages
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: `Extract lead info from this voice transcript. Return ONLY valid JSON.
+Template used: "First name [X]. Last name [X]. Company [X]. Job title [X]. Lead score [1-5]. What we discussed [notes]."
+Fix unclear words: "vprnd"→"VP R&D", "cto"→"CTO", "checkpoint"→"Check Point", etc.
+JSON format (no markdown):
+{"firstName":"","lastName":"","company":"","jobTitle":"","score":3,"notes":""}
+score = integer 1-5.
+Transcript: "${transcript.trim()}"`
+        }]
       })
     });
+
     const data = await resp.json();
+
+    if (data.error) {
+      throw new Error(data.error.message || 'API error');
+    }
+
     const raw = (data.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(raw);
 
@@ -417,16 +360,16 @@ score must be integer 1-5.`
     if (idx !== -1) {
       leads[idx] = {
         ...leads[idx],
-        ...parsed,
+        firstName: parsed.firstName || '',
+        lastName: parsed.lastName || '',
+        company: parsed.company || '',
+        jobTitle: parsed.jobTitle || '',
         score: parseInt(parsed.score) || 3,
+        notes: parsed.notes || '',
         processing: false
       };
-      saveLeadsLocal();
+      saveLeads();
       renderLeads();
-
-      // FIX #2: Sync enriched lead to server (upsert replaces skeleton)
-      await syncLeadToServer(leads[idx]);
-
       const name = [parsed.firstName, parsed.lastName].filter(Boolean).join(' ') || 'Lead';
       toast('✓ ' + name + ' saved!');
     }
@@ -435,16 +378,14 @@ score must be integer 1-5.`
     const idx = leads.findIndex(l => l.id === lead.id);
     if (idx !== -1) {
       leads[idx].processing = false;
-      saveLeadsLocal();
+      saveLeads();
       renderLeads();
-      // Still sync the failed state so other devices see it
-      await syncLeadToServer(leads[idx]);
     }
-    toast('Error: ' + (e.message || 'Please try again'));
+    toast('Error: ' + (e.message || 'Check API key in Settings'));
   }
 }
 
-// ─── LEADS LIST ───────────────────────────────────────────
+// ─── RENDER ───────────────────────────────────────────────
 function scoreColor(s) {
   if (s >= 5) return '#22c55e';
   if (s >= 4) return '#38B6FF';
@@ -499,20 +440,12 @@ function updateBadge() {
 }
 
 // ─── DELETE ───────────────────────────────────────────────
-async function deleteLead(id) {
+function deleteLead(id) {
   if (!confirm('Delete this lead?')) return;
   leads = leads.filter(l => l.id !== id);
-  saveLeadsLocal();
+  saveLeads();
   updateBadge();
   renderLeads();
-  // FIX #2: delete from server too
-  try {
-    await fetch(WORKER + '/leads/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id })
-    });
-  } catch(e) {}
   toast('Lead deleted');
 }
 
@@ -520,22 +453,30 @@ async function deleteLead(id) {
 async function generateEmail(id) {
   const lead = leads.find(l => l.id === id);
   if (!lead) return;
+  const apiKey = getApiKey();
+  if (!apiKey) { toast('Add API key in Settings'); return; }
+
   const btn = document.getElementById('ebtn-' + id);
   btn.textContent = '⏳ Generating...';
   btn.disabled = true;
+
   try {
-    const resp = await fetch(WORKER, {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 400,
         messages: [{
           role: 'user',
-          content: `Write a short personalized follow-up email for a B2B sales lead met at a conference.
+          content: `Write a short personalized follow-up email for a B2B sales lead met at a tech conference.
 Lead: ${lead.firstName} ${lead.lastName}, ${lead.jobTitle} at ${lead.company}.
-What we discussed: ${lead.notes || lead.transcript}.
-Write from CloudZone's perspective. Warm, professional, 5-6 sentences max. Include subject line.`
+Notes: ${lead.notes || lead.transcript}.
+From: CloudZone (AWS Premier Partner). Warm, professional, 5-6 sentences. Include subject line.`
         }]
       })
     });
@@ -544,7 +485,7 @@ Write from CloudZone's perspective. Warm, professional, 5-6 sentences max. Inclu
     const preview = document.getElementById('eprev-' + id);
     preview.textContent = email;
     preview.style.display = 'block';
-    btn.innerHTML = '✉️ Regenerate Email';
+    btn.innerHTML = '✉️ Regenerate';
     btn.disabled = false;
   } catch(e) {
     btn.innerHTML = '✉️ Generate Follow-up Email';
@@ -587,6 +528,7 @@ function switchTab(n) {
   if (n === 'leads') renderLeads();
   if (n === 'settings') {
     document.getElementById('confInput').value = localStorage.getItem('cz_conf') || '';
+    document.getElementById('apiKeyInput').value = getApiKey();
     document.getElementById('savedCnt').textContent = leads.length;
   }
 }
@@ -595,19 +537,15 @@ function saveConf() {
   localStorage.setItem('cz_conf', document.getElementById('confInput').value.trim());
 }
 
-async function clearAll() {
+function clearAll() {
   if (!confirm('Delete ALL ' + leads.length + ' leads?')) return;
   leads = [];
-  localStorage.removeItem('cz_leads_v4');
+  localStorage.removeItem('cz_leads_v5');
   updateBadge();
   renderLeads();
-  try {
-    await fetch(WORKER + '/leads/clear', { method: 'POST' });
-  } catch(e) {}
   toast('All leads cleared');
 }
 
-// ─── TOAST ────────────────────────────────────────────────
 function toast(msg) {
   const t = document.getElementById('toast');
   t.innerHTML = msg;
@@ -616,7 +554,8 @@ function toast(msg) {
 }
 
 // ─── INIT ─────────────────────────────────────────────────
-loadLeads();
+updateBadge();
+renderLeads();
 </script>
 </body>
 </html>
